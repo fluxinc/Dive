@@ -19,18 +19,29 @@ try {
   fs.writeFileSync(promptOutputPath, prompt);
 
   // Generate SCSS content
-  let scssContent = '// This file is auto-generated. Do not edit directly.\n\n';
+  let scssContent = '// This file is auto-generated. Do not edit directly.\n\n' +
+                    '@forward "variables";  // Forward all variables to importing files\n' +
+                    '@use "variables" as *;  // Use variables in this file\n\n';
   
   // Generate SASS variables
   Object.entries(styleConfig).forEach(([key, value]) => {
     scssContent += `$${key}: ${value};\n`;
   });
   
-  // Generate CSS Custom Properties
+  // Generate CSS Custom Properties with higher specificity that overrides both light and dark themes
   scssContent += '\n// CSS Custom Properties\n';
+  
+  // Apply to :root (default theme)
   scssContent += ':root {\n';
   Object.entries(styleConfig).forEach(([key, value]) => {
-    scssContent += `  --${key}: #{$${key}};\n`;
+    scssContent += `  --${key}: ${value} !important;\n`;
+  });
+  scssContent += '}\n\n';
+  
+  // Apply to dark theme as well to ensure it overrides everywhere
+  scssContent += '[data-theme="dark"],\n:root:has([data-theme="dark"]) {\n';
+  Object.entries(styleConfig).forEach(([key, value]) => {
+    scssContent += `  --${key}: ${value} !important;\n`;
   });
   scssContent += '}\n';
   

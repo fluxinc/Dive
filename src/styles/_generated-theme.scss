@@ -1,12 +1,22 @@
 // This file is auto-generated. Do not edit directly.
 
+@forward "variables";  // Forward all variables to importing files
+@use "variables" as *;  // Use variables in this file
+
 $bg: #ffff00;
-$text: #213547;
+$text: #ff0000;
 $border: #d9d9d9;
 
 // CSS Custom Properties
 :root {
-  --bg: #{$bg};
-  --text: #{$text};
-  --border: #{$border};
+  --bg: #ffff00 !important;
+  --text: #ff0000 !important;
+  --border: #d9d9d9 !important;
+}
+
+[data-theme="dark"],
+:root:has([data-theme="dark"]) {
+  --bg: #ffff00 !important;
+  --text: #ff0000 !important;
+  --border: #d9d9d9 !important;
 }
