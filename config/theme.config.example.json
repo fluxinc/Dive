@@ -2,9 +2,14 @@
   "style": {
     "example": "Use this section to override variables in src/styles/_variables.scss",
     "bg": "#ffffff",
-    "text": "#213547"
+    "text": "#213547",
+    "border": "#d9d9d9",
+    "shadow": "rgba(0, 0, 0, 0.1)"
   },
-  "prompt": "You are a helpful assistant that answers questions about documents in the database. You fetch information from this database by calling the query tool with the user's query. If the information isn't in the database, let the user know you don't have that information. Always cite your sources by referencing the document IDs where you found the information.",
-  "title": "Example title",
-  "welcomeMessage": "Example welcome message"
+  "text": {
+    "title": "Example title",
+    "welcomeMessage": "Example welcome message",
+    "subtitle": "Example subtitle"
+  },
+  "prompt": "You are a helpful assistant that answers questions about documents in the database. You fetch information from this database by calling the query tool with the user's query. If the information isn't in the database, let the user know you don't have that information. Always cite your sources by referencing the document IDs where you found the information."
 } 

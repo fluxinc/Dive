@@ -15,9 +15,12 @@ try {
   const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
   const styleConfig = config.style;
   const prompt = config.prompt;
-  const title = config.title || 'Dive AI'; // Default title if not specified
-  const welcomeMessage   = config.welcomeMessage || 'Welcome to Dive AI'; // Default welcome message
-  const welcomeSubtitle = config.welcomeSubtitle || 'Start your AI conversation'; // Default welcome subtitle
+  const textConfig = config.text || {};
+  
+  // Set default text values if not provided
+  const title = textConfig.title || 'Dive AI';
+  const welcomeMessage = textConfig.welcomeMessage || 'Welcome';
+  const welcomeSubtitle = textConfig.subtitle || 'Start your AI conversation';
 
   // Save the prompt wrapper
   fs.writeFileSync(promptOutputPath, prompt);
@@ -40,7 +43,7 @@ try {
   Object.entries(styleConfig).forEach(([key, value]) => {
     scssContent += `  --${key}: ${value} !important;\n`;
   });
-  // Add title and welcome message variables
+  // Add text variables
   scssContent += `  --app-title: "${title}" !important;\n`;
   scssContent += `  --welcome-message: "${welcomeMessage}" !important;\n`;
   scssContent += `  --welcome-subtitle: "${welcomeSubtitle}" !important;\n`;
@@ -51,7 +54,7 @@ try {
   Object.entries(styleConfig).forEach(([key, value]) => {
     scssContent += `  --${key}: ${value} !important;\n`;
   });
-  // Add title and welcome message variables
+  // Add text variables
   scssContent += `  --app-title: "${title}" !important;\n`;
   scssContent += `  --welcome-message: "${welcomeMessage}" !important;\n`;
   scssContent += `  --welcome-subtitle: "${welcomeSubtitle}" !important;\n`;

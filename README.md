@@ -1,3 +1,6 @@
+*This is a fork of the Dive AI client that can be configured by modifying `config/theme.config.json`*
+*See `config/theme.config.example.json`*
+
 # Dive AI Agent 🤿 🤖
 
 ![GitHub stars](https://img.shields.io/github/stars/OpenAgentPlatform/Dive?style=social)

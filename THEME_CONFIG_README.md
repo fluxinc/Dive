@@ -15,8 +15,10 @@ The configuration file has three main sections:
   "style": {
     // Visual theme colors
   },
-  "prompt": "System prompt for the AI assistant",
-  "title": "Application title in the header"
+  "text": {
+    // Application text content
+  },
+  "prompt": "System prompt for the AI assistant"
 }
 ```
 
@@ -35,20 +37,29 @@ The `style` object contains color definitions used throughout the application. T
 
 All colors can use any valid CSS color format: hex, rgb, rgba, hsl, etc.
 
+### Text Configuration
+
+The `text` object contains all configurable text content in the application. This includes the application title and welcome messages.
+
+```json
+"text": {
+  "title": "My Custom RAG App",         // Application title in the header
+  "welcomeMessage": "Welcome",          // Main welcome message
+  "subtitle": "Start the conversation"  // Welcome page subtitle
+}
+```
+
+If not specified, these values default to:
+- title: "Dive AI"
+- welcomeMessage: "Welcome to Dive AI"
+- subtitle: "Start your AI conversation"
+
 ### Prompt Configuration
 
 The `prompt` string defines the system prompt for the AI assistant, controlling how it responds to user queries.
 
 ```json
 "prompt": "You are a helpful assistant that answers questions about documents in the database. You fetch information from this database by calling the query tool with the user's query. If the information isn't in the database, let the user know you don't have that information. Always cite your sources by referencing the document IDs where you found the information."
-```
-
-### Title Configuration
-
-The `title` string sets the application title that appears in the header. If not specified, it defaults to "Dive AI".
-
-```json
-"title": "My Custom RAG App"
 ```
 
 ## Example Use Cases
@@ -62,8 +73,12 @@ The `title` string sets the application title that appears in the header. If not
        "border": "#c0d8f0",
        "shadow": "rgba(0, 0, 0, 0.1)"
      },
-     "prompt": "You are a medical assistant that provides information about health topics. You fetch information from a verified medical database and always cite your sources.",
-     "title": "Medical Assistant"
+     "text": {
+       "title": "Medical Assistant",
+       "welcomeMessage": "Welcome to Your Medical Information Assistant",
+       "subtitle": "Ask me about medical topics"
+     },
+     "prompt": "You are a medical assistant that provides information about health topics. You fetch information from a verified medical database and always cite your sources."
    }
    ```
 
@@ -76,8 +91,12 @@ The `title` string sets the application title that appears in the header. If not
        "border": "#3e4451",
        "shadow": "rgba(255, 255, 255, 0.1)"
      },
-     "prompt": "You are a programming assistant that helps with code documentation. You retrieve coding examples and best practices from the repository database.",
-     "title": "Code Helper"
+     "text": {
+       "title": "Code Helper",
+       "welcomeMessage": "Your Code Documentation Assistant",
+       "subtitle": "Ask questions about code and documentation"
+     },
+     "prompt": "You are a programming assistant that helps with code documentation. You retrieve coding examples and best practices from the repository database."
    }
    ```
 
