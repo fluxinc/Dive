@@ -73,3 +73,9 @@
     }
   }
 }
+
+.app-title {
+  &::before {
+    content: var(--app-title);
+  }
+}

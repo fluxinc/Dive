@@ -14,6 +14,24 @@ import logger from "./utils/logger.js";
 import { iQueryInput, iStreamMessage, ModelSettings } from "./utils/types.js";
 import { openAIConvertToGeminiTools } from "./utils/toolHandler.js";
 import { ToolDefinition } from "@langchain/core/language_models/base";
+import * as fs from 'fs';
+import * as path from 'path';
+
+// Function to get the prepend text
+function getPrependText(): string {
+  try {
+    // Get the app's root directory
+    const appRoot = process.cwd();
+    const prependPath = path.join(appRoot, 'resources', 'generated-prompt-wrapper.txt');
+    return fs.readFileSync(prependPath, 'utf-8');
+  } catch (error) {
+    logger.error(`Error reading prepend text: ${error}`);
+    return ''; // Return empty string if file doesn't exist or can't be read
+  }
+}
+
+// Cache the prepend text
+const prependText = getPrependText();
 
 // Map to store abort controllers
 export const abortControllerMap = new Map<string, AbortController>();
@@ -77,14 +95,16 @@ export async function handleProcessQuery(
     // if retry, then input is empty
     if (input) {
       if (typeof input === "string") {
-        messages.push(new HumanMessage(input));
+        const modifiedInput = `${prependText}\n\n${input}`;
+        messages.push(new HumanMessage(modifiedInput));
       } else {
         // Handle input with images
         const content: MessageContentComplex[] = [];
 
         // Add text content if exists
         if (input.text) {
-          content.push({ type: "text", text: input.text });
+          const modifiedText = `${prependText}\n\n${input.text}`;
+          content.push({ type: "text", text: modifiedText });
         }
 
         // Add image content if exists
@@ -431,7 +451,31 @@ export async function handleProcessQuery(
 
       // Add tool results to conversation
       if (toolResults.length > 0) {
-        messages.push(...toolResults.map((result) => new ToolMessage(result)));
+        const toolResult = toolResults[0];
+        if (toolResult.content) {
+          // Extract the text content
+          let toolResponseText = '';
+          if (Array.isArray(toolResult.content)) {
+            const textContent = toolResult.content.find(item => item.type === "text");
+            if (textContent) {
+              toolResponseText = textContent.text;
+            }
+          } else {
+            toolResponseText = toolResult.content;
+          }
+
+          // Check if the response starts with "EXACT RESPONSE"
+          if (toolResponseText.startsWith("EXACT RESPONSE")) {
+            // Remove the prefix and return the exact response
+            finalResponse = toolResponseText;
+            logger.debug("EXACT RESPONSE", finalResponse);
+            hasToolCalls = false; // Break out of the loop
+            break;
+          }
+
+          // If not an exact response, continue with normal processing
+          messages.push(...toolResults.map((result) => new ToolMessage(result)));
+        }
       }
 
       logger.debug(`[${chatId}] Messages collected and ready to next round`);

@@ -1,0 +1,10 @@
+{
+  "style": {
+    "example": "Use this section to override variables in src/styles/_variables.scss",
+    "bg": "#ffffff",
+    "text": "#213547"
+  },
+  "prompt": "You are a helpful assistant that answers questions about documents in the database. You fetch information from this database by calling the query tool with the user's query. If the information isn't in the database, let the user know you don't have that information. Always cite your sources by referencing the document IDs where you found the information.",
+  "title": "Example title",
+  "welcomeMessage": "Example welcome message"
+} 

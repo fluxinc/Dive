@@ -495,3 +495,15 @@
     }
   }
 }
+
+.welcome-title {
+  &::before {
+    content: var(--welcome-message);
+  }
+}
+
+.welcome-subtitle {
+  &::before {
+    content: var(--welcome-subtitle);
+  }
+}

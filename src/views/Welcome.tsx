@@ -142,8 +142,8 @@ const Welcome = () => {
   return (
     <div className="main-container">
       <div className="welcome-content">
-        <h1>{t("welcome.title")}</h1>
-        <p className="subtitle">{t("welcome.subtitle")}</p>
+        <h1 className="welcome-title"></h1>
+        <p className="welcome-subtitle"></p>
 
         <form className="welcome-input" onSubmit={handleSubmit}>
           <div className="input-container">
