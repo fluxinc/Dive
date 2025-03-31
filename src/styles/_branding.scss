@@ -1,0 +1,7 @@
+@forward "variables";  // Forward all variables to importing files
+@use "variables" as *;  // Use variables in this file
+@use "generated-theme" as theme;  // Use generated theme variables directly
+
+:root {
+  --bg: #{theme.$bg} !important; 
+}

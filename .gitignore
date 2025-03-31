@@ -39,3 +39,4 @@ uploads
 
 # bin folder
 bin
+resources/generated-prompt-wrapper.txt

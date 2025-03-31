@@ -14,8 +14,8 @@
     "url": "https://github.com/OpenAgentPlatform/Dive"
   },
   "scripts": {
-    "dev": "vite --config vite.config.ts",
-    "dev:electron": "vite --config vite.config.electron.ts",
+    "dev": "node scripts/generate-theme.js && vite --config vite.config.ts",
+    "dev:electron": "node scripts/generate-theme.js && vite --config vite.config.electron.ts",
     "lint": "eslint .",
     "preview": "vite preview",
     "build": "tsc -b && vite build",
