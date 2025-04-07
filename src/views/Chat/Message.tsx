@@ -17,6 +17,7 @@ import { themeAtom } from "../../atoms/themeState";
 import Textarea from "../../components/WrappedTextarea"
 import { isChatStreamingAtom } from "../../atoms/chatState"
 import { devModeAtom } from "../../atoms/devModeState"
+import { DevModeOnlyComponent } from "../../components/DevModeOnlyComponent"
 declare global {
   namespace JSX {
     interface IntrinsicElements {
@@ -150,16 +151,14 @@ const Message = ({ messageId, text, isSent, files, isError, isLoading, onRetry, 
               content = children[0]
             }
 
-            if (isDevMode) {
-              return (
+            return (
+              <DevModeOnlyComponent component={
                 <ToolPanel
                   content={content}
                   name={name}
                 />
-              )
-            }
-
-            return <></>
+              } />
+            )
           },
           a(props) {
             return (
