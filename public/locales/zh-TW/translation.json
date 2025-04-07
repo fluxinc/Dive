@@ -80,7 +80,7 @@
     "invalidJson": "無效的 JSON 格式",
     "updateFailed": "{{serverName}} 啟動失敗：{{error}}",
     "installFailed": "安裝失敗",
-    "reloadMCPServers": "⭮",
+    "reloadMCPServers": "⟳",
     "reloadMCPServers.alt": "重新載入並更新 MCP Servers"
   },
   "modelConfig": {

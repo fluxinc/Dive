@@ -3,6 +3,7 @@ import path from "node:path"
 import { spawn } from "cross-spawn"
 import { app } from "electron"
 import fse from "fs-extra"
+import { exec } from "node:child_process"
 
 export function isPortInUse(port: number): Promise<boolean> {
   return new Promise((resolve) => {
@@ -115,4 +116,16 @@ export function compareFilesAndReplace(filePath1: string, filePath2: string) {
   if (fse.existsSync(filePath1) && !compareFiles(filePath1, filePath2) || !fse.existsSync(filePath2)) {
     fse.copyFileSync(filePath1, filePath2)
   }
+}
+
+export function getDarwinSystemPath(): Promise<string> {
+  return new Promise((resolve, reject) => {
+    exec("echo $PATH", (error, stdout, stderr) => {
+      if (error) {
+        reject(error)
+        return
+      }
+      resolve(stdout.trim())
+    })
+  })
 }

@@ -258,7 +258,8 @@
     margin-top: 16px;
 
     .edit-btn,
-    .folder-btn {
+    .folder-btn,
+    .reload-btn {
       display: flex;
       align-items: center;
       gap: 8px;
@@ -289,6 +290,24 @@
       &:hover {
         background: var(--bg-op-dark-ultraweak);
       }
+    }
+
+    .reload-btn {
+      background: var(--bg-op-dark-extremeweak);
+
+      img {
+        height: 16px;
+        width: 16px;
+      }
+    }
+  }
+}
+
+[data-theme='dark'],
+:root:has([data-theme='dark']) {
+  .reload-btn {
+    img {
+      filter: invert(1);
     }
   }
 }

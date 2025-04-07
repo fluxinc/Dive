@@ -421,6 +421,18 @@
       }
     }
 
+    .skip-btn {
+      color: var(--text-ultraweak);
+      font-size: 14px;
+      cursor: pointer;
+      margin-left: auto;
+
+      &:hover {
+        color: var(--text-medium);
+        text-decoration: underline;
+      }
+    }
+
     .custom-instructions {
       h3 {
         font-size: 16px;

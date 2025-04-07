@@ -5,10 +5,9 @@ import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js"
 import { WebSocketClientTransport } from "@modelcontextprotocol/sdk/client/websocket.js";
 import path from "path";
 import { handleConnectToServer } from "../connectServer.js";
-import { SystemCommandManager } from "../syscmd/index.js";
 import logger from "../utils/logger.js";
 import { convertToOpenAITools, loadConfigAndServers } from "../utils/toolHandler.js";
-import { iServerConfig, iTool } from "../utils/types.js";
+import { iConfig, iServerConfig, iTool } from "../utils/types.js";
 import { IMCPServerManager } from "./interface.js";
 
 export class MCPServerManager implements IMCPServerManager {
@@ -20,6 +19,7 @@ export class MCPServerManager implements IMCPServerManager {
   private toolInfos: iTool[] = [];
   // SSE/Websocket 開起來的Client
   private tempClients: Map<string, Client> = new Map();
+  private prevConfig: Record<string, iServerConfig> = {};
   public configPath: string;
 
   private constructor(configPath?: string) {
@@ -52,9 +52,11 @@ export class MCPServerManager implements IMCPServerManager {
     await this.connectAllServers();
   }
 
+  // 連接所有 MCP 伺服器，不檢查是否已經開啟，執行前請確保 mcpServers 都已關閉
   async connectAllServers(): Promise<{ serverName: string; error: unknown }[]> {
     const errorArray: { serverName: string; error: unknown }[] = [];
     const { config, servers } = await loadConfigAndServers(this.configPath);
+    this.prevConfig = config.mcpServers;
     // only connect enabled servers
     const enabledServers = Object.keys(config.mcpServers).filter((serverName) => config.mcpServers[serverName].enabled);
     logger.info(`Connect to ${enabledServers.length} enabled servers...`);
@@ -147,6 +149,8 @@ export class MCPServerManager implements IMCPServerManager {
         });
       }
 
+      logger.info(`Add new server completed: ${serverName}`);
+
       return {
         success: true,
         serverName,
@@ -171,16 +175,19 @@ export class MCPServerManager implements IMCPServerManager {
   async syncServersWithConfig(): Promise<{ serverName: string; error: unknown }[]> {
     logger.info("Syncing servers with configuration...");
     const errorArray: { serverName: string; error: unknown }[] = [];
+    let newConfig: iConfig | undefined;
 
     try {
       // Get configuration differences
-      const { config: newConfig } = await loadConfigAndServers(this.configPath);
-      const currentServers = new Set(this.servers.keys());
+      const { config: newConfig_ } = await loadConfigAndServers(this.configPath);
+      newConfig = newConfig_;
+      const currentRunningServers = new Set(this.servers.keys());
       const configuredServers = new Set(Object.keys(newConfig.mcpServers || {}));
 
       // Handle servers to be removed
-      for (const serverName of currentServers) {
-        if (!configuredServers.has(serverName)) {
+      for (const serverName of currentRunningServers) {
+        // 設定中沒有此 server 或 有此 server 但設定中 disabled
+        if (!configuredServers.has(serverName) || !newConfig.mcpServers[serverName].enabled) {
           logger.info(`Removing server: ${serverName}`);
           await this.disconnectSingleServer(serverName);
         }
@@ -188,25 +195,17 @@ export class MCPServerManager implements IMCPServerManager {
 
       // Handle new or updated servers
       for (const serverName of configuredServers) {
-        const serverConfig = newConfig.mcpServers[serverName];
+        try {
+          const serverConfig = newConfig.mcpServers[serverName];
+          // 設定中 disabled 則不處理
+          if (!serverConfig.enabled) continue;
 
-        if (!currentServers.has(serverName)) {
-          // New server
-          logger.info(`Adding new server: ${serverName}`);
-          const result = await this.connectSingleServer(serverName, serverConfig, {});
-          if (!result.success) {
-            errorArray.push({
-              serverName,
-              error: result.error,
-            });
-          }
-        } else {
-          // Existing server, check properties
-          // check command, args(string[]), env(Record<string, string>)
-          const isPropertiesChanged = this.checkPropertiesChanged(serverName, serverConfig);
-          if (isPropertiesChanged) {
-            logger.info(`Properties changed for server: ${serverName}`);
-            await this.disconnectSingleServer(serverName);
+          if (!serverConfig.transport) serverConfig.transport = "command";
+
+          // 該 Server 還沒有執行
+          if (!currentRunningServers.has(serverName)) {
+            // New server
+            logger.info(`Adding new server: ${serverName}`);
             const result = await this.connectSingleServer(serverName, serverConfig, {});
             if (!result.success) {
               errorArray.push({
@@ -215,16 +214,37 @@ export class MCPServerManager implements IMCPServerManager {
               });
             }
           } else {
-            // check enabled
-            const isCurrentlyEnabled = this.toolInfos.find((info) => info.name === serverName)?.enabled;
-            if (serverConfig.enabled && !isCurrentlyEnabled) {
-              logger.info(`Enabling server: ${serverName}`);
-              await this.updateServerEnabledState(serverName, true);
-            } else if (!serverConfig.enabled && isCurrentlyEnabled) {
-              logger.info(`Disabling server: ${serverName}`);
-              await this.updateServerEnabledState(serverName, false);
+            // 該 Server 已經執行，確認設定是否變更
+            // check command, args(string[]), env(Record<string, string>)
+            const isPropertiesChanged = this.checkPropertiesChanged(serverName, serverConfig);
+            if (isPropertiesChanged) {
+              logger.info(`Properties changed and Restart server: ${serverName}`);
+              await this.disconnectSingleServer(serverName);
+              const result = await this.connectSingleServer(serverName, serverConfig, {});
+              if (!result.success) {
+                errorArray.push({
+                  serverName,
+                  error: result.error,
+                });
+              }
+            } else {
+              // check enabled
+              const isCurrentlyEnabled = this.toolInfos.find((info) => info.name === serverName)?.enabled;
+              if (serverConfig.enabled && !isCurrentlyEnabled) {
+                logger.info(`Enabling server: ${serverName}`);
+                await this.updateServerEnabledState(serverName, true);
+              } else if (!serverConfig.enabled && isCurrentlyEnabled) {
+                logger.info(`Disabling server: ${serverName}`);
+                await this.updateServerEnabledState(serverName, false);
+              }
             }
           }
+        } catch (error) {
+          logger.error(`Error during server configuration sync: ${error}`);
+          errorArray.push({
+            serverName,
+            error: error,
+          });
         }
       }
 
@@ -233,6 +253,10 @@ export class MCPServerManager implements IMCPServerManager {
     } catch (error) {
       logger.error("Error during server configuration sync:", error);
       throw error;
+    } finally {
+      if (newConfig) {
+        this.prevConfig = newConfig.mcpServers;
+      }
     }
   }
 
@@ -271,7 +295,7 @@ export class MCPServerManager implements IMCPServerManager {
         // Remove from toolInfos
         this.toolInfos = this.toolInfos.filter((info) => info.name !== serverName);
 
-        logger.info(`Server ${serverName} disconnected`);
+        logger.info(`Remove server completed: ${serverName}`);
       }
     } catch (error) {
       logger.error(`Error disconnecting server ${serverName}:`, error);
@@ -306,36 +330,11 @@ export class MCPServerManager implements IMCPServerManager {
   }
 
   checkPropertiesChanged(serverName: string, config: iServerConfig) {
-    const client = this.servers.get(serverName);
-    if (!client) return true;
-    const currentParams = (client?.transport as any)._serverParams as iServerConfig;
+    const currentParams = this.prevConfig[serverName] as iServerConfig;
 
-    // check transport type changed
-    if (currentParams.transport !== config.transport) return true;
-
-    // if command transport, check command, args and env
-    if (config.transport === "command" && currentParams.transport === "command") {
-      const currentCommand = currentParams.command || "";
-      const newCommand = SystemCommandManager.getInstance().getValue(config.command || "") || config.command || "";
-      const currentArgs = currentParams.args || [];
-      const newArgs = config.args || [];
-
-      return (
-        currentCommand !== newCommand ||
-        currentArgs.join(",") !== newArgs.join(",") ||
-        JSON.stringify(currentParams.env) !== JSON.stringify(config.env)
-      );
-    }
-
-    // if sse or websocket transport, check url
-    if (
-      (config.transport === "sse" || config.transport === "websocket") &&
-      (currentParams.transport === "sse" || currentParams.transport === "websocket")
-    ) {
-      return currentParams.url !== config.url;
-    }
-
-    return false;
+    if (!currentParams || !config) return true;
+    if (JSON.stringify(currentParams) !== JSON.stringify(config)) return true;
+    else return false;
   }
 
   getAvailableTools(): ToolDefinition[] {

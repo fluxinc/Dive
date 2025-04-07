@@ -10,9 +10,10 @@ const WrappedInput = forwardRef<HTMLInputElement, React.ComponentProps<"input">>
       props.onKeyDown(e)
     }
   }
-  
+
   return (
     <input
+      spellCheck={false}
       {...props}
       ref={ref}
       onKeyDown={onKeyDown}

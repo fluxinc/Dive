@@ -10,7 +10,7 @@
     max-width: unset;
   }
 
-  [role="menuitem"][data-highlighted] {
+  [role="menuitem"][data-highlighted]:hover .item {
     background-color: transparent;
   }
 }

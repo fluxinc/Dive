@@ -80,7 +80,7 @@
     "invalidJson": "Invalid JSON format",
     "updateFailed": "{{serverName}} failed to load: {{error}}",
     "installFailed": "Installation failed",
-    "reloadMCPServers": "⭮",
+    "reloadMCPServers": "⟳",
     "reloadMCPServers.alt": "Reload and Update MCP Servers"
   },
   "modelConfig": {

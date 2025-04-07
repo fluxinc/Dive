@@ -73,7 +73,7 @@
     "invalidJson": "Formato JSON inválido",
     "updateFailed": "{{serverName}} no pudo cargarse: {{error}}",
     "installFailed": "Instalación fallida",
-    "reloadMCPServers": "⭮",
+    "reloadMCPServers": "⟳",
     "reloadMCPServers.alt": "Recargar y Actualizar Servidores MCP"
   },
   "modelConfig": {

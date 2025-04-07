@@ -55,4 +55,23 @@
       transition: .4s;
     }
   }
+
+  &.medium {
+    height: 30px;
+
+    .switch-slider:before {
+      height: 24px;
+      width: 24px;
+    }
+
+    .switch-input[type="checkbox"] {
+      &:checked ~ .switch-slider {
+        &:before {
+          -webkit-transform: translateX(22px);
+          -ms-transform: translateX(22px);
+          transform: translateX(22px);
+        }
+      }
+    }
+  }
 }

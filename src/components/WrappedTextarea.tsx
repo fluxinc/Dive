@@ -5,7 +5,7 @@ const WrappedTextarea = forwardRef<HTMLTextAreaElement, React.ComponentProps<"te
     if (!e.altKey && !e.ctrlKey && !e.metaKey) {
       e.stopPropagation()
     }
-    
+
     if (props.onKeyDown) {
       props.onKeyDown(e)
     }
@@ -13,6 +13,7 @@ const WrappedTextarea = forwardRef<HTMLTextAreaElement, React.ComponentProps<"te
 
   return (
     <textarea
+      spellCheck={false}
       {...props}
       ref={ref}
       onKeyDown={onKeyDown}
