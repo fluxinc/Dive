@@ -16,7 +16,7 @@ import { useTranslation } from 'react-i18next'
 import { themeAtom } from "../../atoms/themeState";
 import Textarea from "../../components/WrappedTextarea"
 import { isChatStreamingAtom } from "../../atoms/chatState"
-
+import { devModeAtom } from "../../atoms/devModeState"
 declare global {
   namespace JSX {
     interface IntrinsicElements {
@@ -50,6 +50,7 @@ const Message = ({ messageId, text, isSent, files, isError, isLoading, onRetry, 
   const [content, setContent] = useState(text)
   const [editedText, setEditedText] = useState(text)
   const isChatStreaming = useAtomValue(isChatStreamingAtom)
+  const isDevMode = useAtomValue(devModeAtom)
   const copyToClipboard = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text)
@@ -149,12 +150,16 @@ const Message = ({ messageId, text, isSent, files, isError, isLoading, onRetry, 
               content = children[0]
             }
 
-            return (
-              <ToolPanel
-                content={content}
-                name={name}
-              />
-            )
+            if (isDevMode) {
+              return (
+                <ToolPanel
+                  content={content}
+                  name={name}
+                />
+              )
+            }
+
+            return <></>
           },
           a(props) {
             return (
