@@ -47,23 +47,23 @@ try {
   // Apply to :root (default theme)
   scssContent += ':root {\n';
   Object.entries(styleConfig).forEach(([key, value]) => {
-    scssContent += `  --${key}: ${value} !important;\n`;
+    scssContent += `  --${key}: ${value};\n`;
   });
   // Add text variables
-  scssContent += `  --app-title: "${title}" !important;\n`;
-  scssContent += `  --welcome-message: "${welcomeMessage}" !important;\n`;
-  scssContent += `  --welcome-subtitle: "${welcomeSubtitle}" !important;\n`;
+  scssContent += `  --app-title: "${title}";\n`;
+  scssContent += `  --welcome-message: "${welcomeMessage}";\n`;
+  scssContent += `  --welcome-subtitle: "${welcomeSubtitle}";\n`;
   scssContent += '}\n\n';
   
   // Apply to dark theme as well to ensure it overrides everywhere
   scssContent += '[data-theme="dark"],\n:root:has([data-theme="dark"]) {\n';
   Object.entries(styleConfig).forEach(([key, value]) => {
-    scssContent += `  --${key}: ${value} !important;\n`;
+    scssContent += `  --${key}: ${value};\n`;
   });
   // Add text variables
-  scssContent += `  --app-title: "${title}" !important;\n`;
-  scssContent += `  --welcome-message: "${welcomeMessage}" !important;\n`;
-  scssContent += `  --welcome-subtitle: "${welcomeSubtitle}" !important;\n`;
+  scssContent += `  --app-title: "${title}";\n`;
+  scssContent += `  --welcome-message: "${welcomeMessage}";\n`;
+  scssContent += `  --welcome-subtitle: "${welcomeSubtitle}";\n`;
   scssContent += '}\n';
   
   // Write the generated SCSS file

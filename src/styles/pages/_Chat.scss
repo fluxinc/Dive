@@ -1,4 +1,4 @@
-@use "../_variables" as *;
+@use "../generated-theme" as *;
 @use "sass:color";
 
 .chat-page {
@@ -129,7 +129,7 @@
       line-height: 20px;
       max-height: 120px;
       overflow-y: auto;
-      background: var(--bg);
+      background: var(--bg-weak);
       color: var(--text);
 
       @include scrollbar;
