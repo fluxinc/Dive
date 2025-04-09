@@ -1,6 +1,7 @@
-import fs from 'fs';
+import fse from 'fs-extra';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import envPaths from 'env-paths';
 
 // Get current directory path in ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -9,10 +10,14 @@ const __dirname = path.dirname(__filename);
 // Read the config file
 const configPath = path.join(__dirname, '../config/theme.config.json');
 const styleOutputPath = path.join(__dirname, '../src/styles/_generated-theme.scss');
-const promptOutputPath = path.join(__dirname, '../resources/generated-prompt-wrapper.txt');
 
+const packageJson = JSON.parse(fse.readFileSync(path.join(__dirname, '../package.json'), 'utf8'));
+const appName = packageJson.name;
+export const envPath = envPaths(appName, {suffix: ""})
+const configDir = envPath.config
+const customRulesPath = path.join(configDir, '.customrules');
 try {
-  const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+  const config = JSON.parse(fse.readFileSync(configPath, 'utf8'));
   const styleConfig = config.style;
   const prompt = config.prompt;
   const textConfig = config.text || {};
@@ -22,8 +27,8 @@ try {
   const welcomeMessage = textConfig.welcomeMessage || 'Welcome';
   const welcomeSubtitle = textConfig.subtitle || 'Start your AI conversation';
 
-  // Save the prompt wrapper
-  fs.writeFileSync(promptOutputPath, prompt);
+  // Save the user prompt
+  fse.writeFileSync(customRulesPath, prompt);
 
   // Generate SCSS content
   let scssContent = '// This file is auto-generated. Do not edit directly.\n\n' +
@@ -61,7 +66,7 @@ try {
   scssContent += '}\n';
   
   // Write the generated SCSS file
-  fs.writeFileSync(styleOutputPath, scssContent);
+  fse.writeFileSync(styleOutputPath, scssContent);
   console.log('Theme variables generated successfully!');
 } catch (error) {
   console.error('Error generating theme variables:', error);
