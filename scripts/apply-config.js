@@ -1,3 +1,4 @@
+// Writes from the theme.config.json file to the various other locations, to customize the application.
 import fse from 'fs-extra';
 import path from 'path';
 import { fileURLToPath } from 'url';

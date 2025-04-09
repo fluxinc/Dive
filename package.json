@@ -11,17 +11,17 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/OpenAgentPlatform/Dive"
+    "url": "https://github.com/fluxinc/Dive"
   },
   "scripts": {
-    "dev": "node scripts/generate-theme.js && vite --config vite.config.ts",
+    "dev": "node scripts/apply-config.js && vite --config vite.config.ts",
     "watch": "nodemon --watch config/theme.config.json --exec 'npm run dev'",
     "watch:electron": "nodemon --watch config/theme.config.json --exec 'npm run dev:electron'",
-    "dev:electron": "node scripts/generate-theme.js && vite --config vite.config.electron.ts",
+    "dev:electron": "node scripts/apply-config.js && vite --config vite.config.electron.ts",
     "lint": "eslint .",
     "preview": "vite preview",
-    "build": "tsc -b && vite build",
-    "build:electron": "tsc -b && vite build --config vite.config.electron.ts",
+    "build": "node scripts/apply-config.js && tsc -b && vite build",
+    "build:electron": "node scripts/apply-config.js && tsc -b && vite build --config vite.config.electron.ts",
     "build:services": "vite build --config vite.config.service.ts",
     "start:services": "vite-node services/main.ts",
     "postinstall": "patch-package && electron-builder install-app-deps",
