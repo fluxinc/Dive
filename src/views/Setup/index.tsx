@@ -11,7 +11,7 @@ const Setup = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const isInitialSetup = location.pathname !== '/setup'
-  const [localProvider, setLocalProvider] = useState<InterfaceProvider>("openai")
+  const [localProvider, setLocalProvider] = useState<InterfaceProvider>("ollama")
   const showToast = useSetAtom(showToastAtom)
 
   const handleSubmit = async (data: any) => {

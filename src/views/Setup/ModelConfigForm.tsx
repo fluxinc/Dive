@@ -9,6 +9,7 @@ import useDebounce from "../../hooks/useDebounce"
 import { showToastAtom } from "../../atoms/toastState"
 import Input from "../../components/WrappedInput"
 import { transformModelProvider } from "../../helper/config"
+import { DevModeOnlyComponent } from "../../components/DevModeOnlyComponent"
 
 interface ModelConfigFormProps {
   provider: InterfaceProvider
@@ -33,12 +34,12 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isVerified, setIsVerified] = useState(false)
   const [listOptions, setListOptions] = useState<Record<string, string[]>>({} as Record<string, string[]>)
-  const initProvider = useRef(provider)
+  const initProvider = useRef<InterfaceProvider | null>(null)
   const loadConfig = useSetAtom(loadConfigAtom)
   const saveConfig = useSetAtom(saveFirstConfigAtom)
   const writeEmptyConfig = useSetAtom(writeEmptyConfigAtom)
   const showToast = useSetAtom(showToastAtom)
-
+  
   const [fetchListOptions, cancelFetch] = useDebounce(async (key: string, field: FieldDefinition, deps: Record<string, string>) => {
     try {
       const options = await field.listCallback!(deps)
@@ -62,8 +63,9 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
     if (initProvider.current !== provider) {
       setListOptions({})
       setFormData(getFieldDefaultValue())
+      initProvider.current = provider
     }
-  }, [provider])
+  }, [provider, fields])
 
   useEffect(() => {
     Object.entries(fields).forEach(([key, field]) => {
@@ -249,18 +251,21 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
 
   return (
     <form onSubmit={handleSubmit}>
-      <div className="form-group">
-        <label>{t("setup.provider")}</label>
-        <select
-          value={provider}
-          onChange={handleProviderChange}
-          className="provider-select"
-        >
-          {PROVIDERS.map(p => (
-            <option key={p} value={p}>{PROVIDER_LABELS[p]}</option>
-          ))}
-        </select>
-      </div>
+      <DevModeOnlyComponent component={
+        <div className="form-group">
+          <label>{t("setup.provider")}</label>
+          <select
+            value={provider}
+            onChange={handleProviderChange}
+            className="provider-select disabled"
+          >
+            {PROVIDERS.map(p => (
+              <option key={p} value={p}>{PROVIDER_LABELS[p]}</option>
+            ))}
+          </select>
+        </div>
+      }/>
+      
 
       {Object.entries(fields).map(([key, field]) => (
         <div key={key} className="form-group">
