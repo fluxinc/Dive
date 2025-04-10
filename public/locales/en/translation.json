@@ -94,6 +94,11 @@
     "modelDescription": "Model name to use",
     "modelDescriptionHint": "Model name to use (Please enter API Key first to see available models)"
   },
+  "mcpConfig": {
+    "connectionTypeDescription": "The type of connection to use",
+    "serverURLDescription": "The URL of the MCP server",
+    "serverFileLocationDescription": "The location of the MCP server file"
+  },
   "common": {
     "close": "Close",
     "confirm": "Confirm",

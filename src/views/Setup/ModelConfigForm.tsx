@@ -69,24 +69,56 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
 
   useEffect(() => {
     Object.entries(fields).forEach(([key, field]) => {
-      if (field.type === "list" && field.listCallback && field.listDependencies) {
-        const deps = field.listDependencies.reduce((acc, dep) => ({
-          ...acc,
-          [dep]: formData[dep as keyof InterfaceModelConfig] || ""
-        }), {})
+      if (field.type === "list") {
+        if (field.listOptions && field.listOptions.length > 0) {
+          setListOptions(prev => ({
+            ...prev,
+            [key]: field.listOptions || []
+          }));
+          if (!field.listOptions.includes(formData[key as keyof ModelConfig] as string)) {
+            handleChange(key, field.listOptions[0]);
+          }
+        } else if (field.listCallback && field.listDependencies) {
+          const deps = field.listDependencies.reduce((acc, dep) => ({
+            ...acc,
+            [dep]: formData[dep as keyof InterfaceModelConfig] || ""
+          }), {});
 
-        const allDepsHaveValue = field.listDependencies.every(dep => !!formData[dep as keyof ModelConfig])
+          const allDepsHaveValue = field.listDependencies.every(dep => !!formData[dep as keyof ModelConfig]);
 
-        if (allDepsHaveValue) {
-          fetchListOptions(key, field, deps)
+          if (allDepsHaveValue) {
+            fetchListOptions(key, field, deps);
+          }
         }
       }
-    })
+    });
 
     return () => {
-      cancelFetch()
-    }
-  }, [fields, formData])
+      cancelFetch();
+    };
+  }, [fields, formData]);
+
+  useEffect(() => {
+    const filteredFields = Object.entries(fields).reduce((acc, [key, field]) => {
+      if (field.conditionCallback) {
+        const deps = field.conditionDependencies?.reduce((depAcc, dep) => ({
+          ...depAcc,
+          [dep]: formData[dep as keyof InterfaceModelConfig] || ""
+        }), {}) || {};
+
+        if (field.conditionCallback(deps)) {
+          acc[key] = field;
+        }
+      } else {
+        acc[key] = field;
+      }
+      return acc;
+    }, {} as Record<string, FieldDefinition>);
+
+    setFilteredFields(filteredFields);
+  }, [fields, formData]);
+
+  const [filteredFields, setFilteredFields] = useState<Record<string, FieldDefinition>>(fields);
 
   const getFieldDefaultValue = () => {
     return Object.keys(fields).reduce((acc, key) => {
@@ -232,7 +264,7 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
-    Object.entries(fields).forEach(([key, field]) => {
+    Object.entries(filteredFields).forEach(([key, field]) => {
       if (field.required && !formData[key as keyof ModelConfig]) {
         newErrors[key] = t("setup.required")
       }
@@ -267,7 +299,7 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
       }/>
       
 
-      {Object.entries(fields).map(([key, field]) => (
+      {Object.entries(filteredFields).map(([key, field]) => (
         <div key={key} className="form-group">
           <label>
             {field.label}

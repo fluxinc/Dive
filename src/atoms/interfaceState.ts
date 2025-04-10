@@ -37,10 +37,44 @@ export interface FieldDefinition {
   label: string
   listCallback?: (deps: Record<string, string>) => Promise<string[]>
   listDependencies?: string[]
+  listOptions?: string[],
+  conditionCallback?: (deps: Record<string, string>) => boolean
+  conditionDependencies?: string[]
 }
 
 export type InterfaceDefinition = Record<string, FieldDefinition>
 
+export const mcpConnectionInterface: InterfaceDefinition = {
+  connectionType: {
+    type: "list",
+    label: "Connection Type",
+    description: "mcpConfig.connectionTypeDescription",
+    required: true,
+    default: "",
+    placeholder: "Select a connection type",
+    listOptions: ["STDIO", "SSE"],
+  },
+  serverURL: {
+    type: "string",
+    label: "Server URL",
+    description: "mcpConfig.serverURLDescription",
+    required: true,
+    default: "",
+    placeholder: "Server URL",
+    conditionCallback: (deps) => deps.connectionType === "SSE",
+    conditionDependencies: ["connectionType"]
+  },
+  serverFileLocation: {
+    type: "string",
+    label: "Server File Location",
+    description: "mcpConfig.serverFileLocationDescription",
+    required: true,
+    default: "",
+    placeholder: "Server File Location",
+    conditionCallback: (deps) => deps.connectionType === "STDIO",
+    conditionDependencies: ["connectionType"]
+  }
+}
 export const defaultInterface: Record<InterfaceProvider, InterfaceDefinition> = {
   openai: {
     apiKey: {

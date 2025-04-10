@@ -101,11 +101,12 @@
   padding: 8px;
   display: flex;
   flex-direction: column;
+  border: 1px solid var(--border-weak);
   border-radius: 12px;
   position: relative;
   bottom: 20px;
   z-index: 1;
-  background: var(--bg-weak);
+  background: var(--bg);
   color: var(--text);
   max-width: $chat-width;
   margin: 0 auto;
