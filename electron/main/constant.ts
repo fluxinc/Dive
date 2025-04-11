@@ -21,20 +21,7 @@ export const darwinPathList = [
   "/usr/local/bin",
   "/usr/bin",
 ]
-
 export const DEF_MCP_SERVER_CONFIG = {
   "mcpServers": {
-    "flux-rag-server-stdio": {
-      "enabled": true,
-      "command": "node",
-      "args": [
-        "/Users/lukezeches/Work/RAG/mcp/dist/index.js", // TODO: decide where to store the MCP server 
-        "--log"
-      ],
-      "env": {
-        "DATABRIDGE_SERVER_URL": "http://localhost:8000",
-        "LOG_FILE_PATH": path.join(envPath.log, "rag-server.log")
-      },
-    },
   }
 }

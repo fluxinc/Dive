@@ -45,24 +45,24 @@ export interface FieldDefinition {
 export type InterfaceDefinition = Record<string, FieldDefinition>
 
 export const mcpConnectionInterface: InterfaceDefinition = {
-  connectionType: {
+  transport: {
     type: "list",
     label: "Connection Type",
     description: "mcpConfig.connectionTypeDescription",
     required: true,
     default: "",
     placeholder: "Select a connection type",
-    listOptions: ["STDIO", "SSE"],
+    listOptions: ["command", "sse"],
   },
-  serverURL: {
+  url: {
     type: "string",
     label: "Server URL",
     description: "mcpConfig.serverURLDescription",
     required: true,
     default: "",
     placeholder: "Server URL",
-    conditionCallback: (deps) => deps.connectionType === "SSE",
-    conditionDependencies: ["connectionType"]
+    conditionCallback: (deps) => deps.transport === "sse",
+    conditionDependencies: ["transport"]
   },
   serverFileLocation: {
     type: "string",
@@ -71,8 +71,8 @@ export const mcpConnectionInterface: InterfaceDefinition = {
     required: true,
     default: "",
     placeholder: "Server File Location",
-    conditionCallback: (deps) => deps.connectionType === "STDIO",
-    conditionDependencies: ["connectionType"]
+    conditionCallback: (deps) => deps.transport === "command",
+    conditionDependencies: ["transport"]
   }
 }
 export const defaultInterface: Record<InterfaceProvider, InterfaceDefinition> = {

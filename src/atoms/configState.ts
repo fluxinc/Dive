@@ -39,6 +39,16 @@ export type MultiModelConfig = ProviderRequired & ModelParameter & {
   models: string[]
 }
 
+export type MCPServerConfig ={
+  transport: "command" | "sse" | "websocket";
+  enabled?: boolean;
+  command?: string;
+  cwd?: string;
+  args?: string[];
+  env?: Record<string, string>;
+  url?: string;
+}
+
 export const configAtom = atom<RawModelConfig>({
   activeProvider: "",
   configs: {}
@@ -261,6 +271,32 @@ export const writeEmptyConfigAtom = atom(
     )
 
     set(configAtom, config)
+  }
+)
+
+
+
+export const writeMCPConfigAtom = atom(
+  null,
+  async (get, set, serverName: string, config: MCPServerConfig ) => {
+    try {
+      const response = await fetch(`/api/config/mcpserver?force=1`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({mcpServers: {[serverName]: config}}),
+      })
+
+      const data = await response.json()
+      if (!data.success) {
+        throw new Error(data.error || "Failed to save MCP config")
+      }
+      return data
+    } catch (error) {
+      console.error("Failed to save MCP config:", error)
+      throw error
+    }
   }
 )
 

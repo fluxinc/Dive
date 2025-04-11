@@ -5,3 +5,9 @@ export const ignoreFieldsForModel = [
     prefix: "o3-mini",
   }  
 ]
+
+export const fieldsForMCPServer = [
+  "transport",
+  "url",
+  "serverFileLocation",
+]

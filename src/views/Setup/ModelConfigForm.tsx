@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from "react"
 import { useTranslation } from "react-i18next"
 import { FieldDefinition, InterfaceProvider, PROVIDER_LABELS, PROVIDERS } from "../../atoms/interfaceState"
-import { InterfaceModelConfig, ModelConfig, saveFirstConfigAtom, writeEmptyConfigAtom } from "../../atoms/configState"
-import { ignoreFieldsForModel } from "../../constants"
+import { InterfaceModelConfig, MCPServerConfig, ModelConfig, saveFirstConfigAtom, writeEmptyConfigAtom, writeMCPConfigAtom } from "../../atoms/configState"
+import { fieldsForMCPServer, ignoreFieldsForModel } from "../../constants"
 import { useSetAtom } from "jotai"
 import { loadConfigAtom } from "../../atoms/configState"
 import useDebounce from "../../hooks/useDebounce"
@@ -38,6 +38,7 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
   const loadConfig = useSetAtom(loadConfigAtom)
   const saveConfig = useSetAtom(saveFirstConfigAtom)
   const writeEmptyConfig = useSetAtom(writeEmptyConfigAtom)
+  const writeMCPConfig = useSetAtom(writeMCPConfigAtom)
   const showToast = useSetAtom(showToastAtom)
   
   const [fetchListOptions, cancelFetch] = useDebounce(async (key: string, field: FieldDefinition, deps: Record<string, string>) => {
@@ -145,7 +146,7 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
       delete (_config as any).temperature
     }
 
-    return Object.keys(_config).reduce((acc, key) => {
+    const modelConfig = Object.keys(_config).reduce((acc, key) => {
       if (ignoreFieldsForModel.some(item => (item.model === _config.model || _config.model?.startsWith(item.prefix)) && item.fields.includes(key))) {
         return acc
       }
@@ -155,6 +156,56 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
         [key]: _config[key as keyof ModelConfig]
       }
     }, {} as InterfaceModelConfig)
+
+    // Filter fields for MCP server config
+    const mcpConfig = Object.keys(_config).reduce((acc, key) => {
+      if (fieldsForMCPServer.includes(key)) {
+        return {
+          ...acc,
+          [key]: _config[key as keyof ModelConfig]
+        }
+      }
+
+      return acc
+    }, {} as {
+      transport: "command" | "sse",
+      url?: string,
+      serverFileLocation?: string,
+    })
+
+    // Transform the MCP config to the correct format to be written to the config file
+    const transformedMCPConfig: MCPServerConfig = {
+      transport: mcpConfig.transport,
+    }
+
+    if (mcpConfig.transport === "command") {
+      const fileEndingMatch = mcpConfig.serverFileLocation?.match(/\.[^.]+$/)
+      transformedMCPConfig.command = "node"
+      transformedMCPConfig.enabled = true
+      const serverFileLocation = mcpConfig.serverFileLocation as string
+      if (fileEndingMatch) {
+        // If the serverFileLocation is a file path, we need to get the directory
+        transformedMCPConfig.cwd = serverFileLocation.split("/").slice(0, -1).join("/")
+        transformedMCPConfig.args = [serverFileLocation]
+      } else {
+        // Otherwise, the serverFileLocation is a directory and assume the server file is index.js
+        transformedMCPConfig.cwd = mcpConfig.serverFileLocation
+        if (serverFileLocation.endsWith("/")) {
+          transformedMCPConfig.args = [serverFileLocation + "index.js"]
+        } else {
+          transformedMCPConfig.args = [serverFileLocation + "/index.js"]
+        }
+      }
+      transformedMCPConfig.args.push("--log")
+    }
+    else {
+      transformedMCPConfig.url = mcpConfig.url
+    }
+
+    return {
+      modelConfig,
+      mcpConfig: transformedMCPConfig
+    }
   }, [])
 
   const verifyModel = async () => {
@@ -164,7 +215,7 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
       const configuration = {...formData} as Partial<Pick<ModelConfig, "configuration">> & Omit<ModelConfig, "configuration">
       delete configuration.configuration
 
-      const _formData = prepareModelConfig(formData, provider)
+      const _formData = prepareModelConfig(formData, provider).modelConfig
 
       if (modelProvider === "bedrock") {
         _formData.apiKey = (_formData as any).accessKeyId || (_formData as any).credentials.accessKeyId
@@ -236,12 +287,13 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
     if (!validateForm())
       return
 
-    const _formData = prepareModelConfig(formData, provider)
+    const { modelConfig, mcpConfig } = prepareModelConfig(formData, provider)
 
     try {
       setIsSubmitting(true)
-      const data = await saveConfig({ data: _formData, provider })
-      await onSubmit(data)
+      const modelData = await saveConfig({ data: modelConfig, provider })
+      const mcpData = await writeMCPConfig("rag_mcp", mcpConfig)
+      await onSubmit({...modelData, ...mcpData})
       loadConfig()
     } finally {
       setIsSubmitting(false)
