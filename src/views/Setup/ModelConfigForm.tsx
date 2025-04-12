@@ -146,6 +146,9 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
       delete (_config as any).temperature
     }
 
+    if (!_config.temperature) {
+      _config.temperature = 0.2
+    }
     const modelConfig = Object.keys(_config).reduce((acc, key) => {
       if (ignoreFieldsForModel.some(item => (item.model === _config.model || _config.model?.startsWith(item.prefix)) && item.fields.includes(key))) {
         return acc
