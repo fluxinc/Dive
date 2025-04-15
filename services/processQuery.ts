@@ -423,10 +423,20 @@ export async function handleProcessQuery(
                 } as iStreamMessage)
               );
 
+              // Filter out sources if this is a query tool result
+              let processedResult = result;
+              if (toolName === 'query' && result && result.content && Array.isArray(result.content)) {
+                // Filter out source info before sending to LLM
+                processedResult = {
+                  ...result,
+                  content: result.content.filter((item: any) => item.type == "text" && !item.text?.startsWith("<SOURCES>"))
+                };
+              }
+
               return {
                 tool_call_id: toolCall.id,
                 role: "tool" as const,
-                content: JSON.stringify(result),
+                content: JSON.stringify(processedResult),
               };
             } finally {
               if (mainAbortListener && chatId && abortControllerMap.has(chatId)) {
