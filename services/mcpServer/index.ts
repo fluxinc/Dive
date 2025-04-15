@@ -23,9 +23,9 @@ export class MCPServerManager implements IMCPServerManager {
   public configPath: string;
 
   // Add these properties to store tool calls, results, and sources for each chat
-  private chatToolCalls = new Map<string, any[]>();
-  private chatToolResults = new Map<string, any[]>();
-  private chatSources = new Map<string, string[]>();
+  private chatToolCalls = new Map<string, Record<string, any>[]>();
+  private chatToolResults = new Map<string, Record<string, any>[]>();
+  private chatSources = new Map<string, Array<{filename: string, url: string}>>();
 
   private constructor(configPath?: string) {
     this.configPath = configPath || path.join(process.cwd(), "config.json");
@@ -393,7 +393,7 @@ export class MCPServerManager implements IMCPServerManager {
     this.chatToolCalls.get(chatId)!.push(toolCall);
   }
 
-  public trackToolResult(chatId: string, toolResult: any) {
+  public trackToolResult(chatId: string, toolResult: Record<string, any>) {
     if (!this.chatToolResults.has(chatId)) {
       this.chatToolResults.set(chatId, []);
     }
@@ -401,28 +401,45 @@ export class MCPServerManager implements IMCPServerManager {
     
     // If this is a query tool with sources, extract and track them
     if (toolResult.name === 'query' && toolResult.result && toolResult.result.content) {
-      const sourcesResult = toolResult.result.content.find((item: any) => item.text && item.text.startsWith("<SOURCES>"));
+      const sourcesResult = toolResult.result.content.find((item: {text?: string; type?: string}) => item.text && item.text.startsWith("<SOURCES>"));
       if (sourcesResult) {
-        const sourceUrls = sourcesResult.text
-          .replace("<SOURCES>", "")
-          .replace("</SOURCES>", "")
-          .trim()
-          .split("\n")
-          .filter(Boolean);
+        // Source URLs are in the form of <SOURCES><FILENAME>filename1</FILENAME>url1\n<FILENAME>filename2</FILENAME>url2\n...</SOURCES>
+        const sourceText = sourcesResult.text.replace("<SOURCES>", "").replace("</SOURCES>", "").trim();
+        const sourcesList = sourceText.split("\n");
         
-        this.trackSources(chatId, sourceUrls);
+        const parsedSources = sourcesList.map((item: string) => {
+          if (item.includes("</FILENAME>")) {
+            const splitSource = item.split("</FILENAME>");
+            const filename = splitSource[0].slice("<FILENAME>".length);
+            const url = splitSource[1];
+            return { filename, url };
+          } else {
+            // Fallback for sources without filenames
+            return { filename: "", url: item };
+          }
+        });
+        
+        this.trackSources(chatId, parsedSources);
       }
     }
   }
 
-  public trackSources(chatId: string, sources: string[]) {
+  public trackSources(chatId: string, sources: Array<{filename: string, url: string}>) {
     if (!this.chatSources.has(chatId)) {
       this.chatSources.set(chatId, []);
     }
     
-    // Add unique sources only
+    // Add unique sources only (compare by URL)
     const existingSources = this.chatSources.get(chatId)!;
-    const newSources = sources.filter(source => !existingSources.includes(source));
+    const existingUrls = new Set(existingSources.map(source => 
+      typeof source === 'string' ? source : source.url
+    ));
+    
+    const newSources = sources.filter(source => {
+      const url = typeof source === 'string' ? source : source.url;
+      return !existingUrls.has(url);
+    });
+    
     if (newSources.length > 0) {
       this.chatSources.set(chatId, [...existingSources, ...newSources]);
     }
@@ -436,7 +453,7 @@ export class MCPServerManager implements IMCPServerManager {
     return this.chatToolResults.get(chatId) || null;
   }
 
-  public getLastSources(chatId: string): string[] | null {
+  public getLastSources(chatId: string): Array<{filename: string, url: string}> | null {
     return this.chatSources.get(chatId) || null;
   }
 

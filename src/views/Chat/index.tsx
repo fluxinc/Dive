@@ -353,14 +353,23 @@ const ChatWindow = () => {
                   // Source URLs are in the form of <SOURCES><FILENAME>filename1</FILENAME>url1\n<FILENAME>filename2</FILENAME>url2\n<FILENAME>filename3</FILENAME>url3</SOURCES>
                   const sourcesList = sourcesResult.text.replace("<SOURCES>", "").replace("</SOURCES>", "").trim().split("\n")
                   const sourceUrlsList = sourcesList.map((item: string) => {
-                    const splitSource = item.split("</FILENAME>")
-                    const filename = splitSource[0].slice("<FILENAME>".length)
-                    const url = splitSource[1]
-                    return {
-                      filename,
-                      url
+                    if (item.includes("</FILENAME>")) {
+                      const splitSource = item.split("</FILENAME>")
+                      const filename = splitSource[0].slice("<FILENAME>".length)
+                      const url = splitSource[1]
+                      return {
+                        filename,
+                        url
+                      }
+                    } else {
+                      // Handle sources that are just URLs without filenames
+                      return {
+                        filename: "",
+                        url: item
+                      }
                     }
                   })
+                  
                   const resultWithoutSources = result.result.content.filter((item: any) => !item.text?.startsWith("<SOURCES>"))
                   // Add source URLs as a data-source element
                   currentText += `\n<data-source>${safeBase64Encode(JSON.stringify(sourceUrlsList))}</data-source>\n`
