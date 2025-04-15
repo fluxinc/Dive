@@ -14,6 +14,7 @@ import logger from "./utils/logger.js";
 import { iQueryInput, iStreamMessage, ModelSettings } from "./utils/types.js";
 import { openAIConvertToGeminiTools } from "./utils/toolHandler.js";
 import { ToolDefinition } from "@langchain/core/language_models/base";
+import { MCPServerManager } from "./mcpServer/index.js";
 
 // Map to store abort controllers
 export const abortControllerMap = new Map<string, AbortController>();
@@ -299,18 +300,27 @@ export async function handleProcessQuery(
 
       // Send call info before tool execution
       if (toolCalls.length > 0) {
+        const toolCallData = toolCalls.map((call) => {
+          logger.info(
+            `[Tool Calls] [${call.function.name}] ${JSON.stringify(call.function.arguments || "{}", null, 2)}`
+          );
+          const callData = {
+            name: call.function.name,
+            arguments: JSON.parse(call.function.arguments || "{}"),
+          };
+          
+          // Track tool call in the server manager
+          if (chatId) {
+            MCPServerManager.getInstance().trackToolCall(chatId, callData);
+          }
+          
+          return callData;
+        });
+        
         onStream?.(
           JSON.stringify({
             type: "tool_calls",
-            content: toolCalls.map((call) => {
-              logger.info(
-                `[Tool Calls] [${call.function.name}] ${JSON.stringify(call.function.arguments || "{}", null, 2)}`
-              );
-              return {
-                name: call.function.name,
-                arguments: JSON.parse(call.function.arguments || "{}"),
-              };
-            }),
+            content: toolCallData,
           } as iStreamMessage)
         );
       }
@@ -396,13 +406,20 @@ export async function handleProcessQuery(
               if (result?.isError) logger.error(`[Tool Result] [${toolName}] ${JSON.stringify(result, null, 2)}`);
               else logger.info(`[Tool Result] [${toolName}] ${JSON.stringify(result, null, 2)}`);
 
+              const toolResultData = {
+                name: toolName,
+                result: result,
+              };
+
+              // Track tool result in the server manager
+              if (chatId) {
+                MCPServerManager.getInstance().trackToolResult(chatId, toolResultData);
+              }
+
               onStream?.(
                 JSON.stringify({
                   type: "tool_result",
-                  content: {
-                    name: toolName,
-                    result: result,
-                  },
+                  content: toolResultData,
                 } as iStreamMessage)
               );
 

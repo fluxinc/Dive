@@ -27,7 +27,8 @@
     "editDescription": "Editing this message will regenerate a new response",
     "cancel": "Cancel",
     "save": "Save",
-    "toolCalls": "🛠 Tool Calls Result from {{name}}"
+    "toolCalls": "🛠 Tool Calls Result from {{name}}",
+    "sources": "Sources"
   },
   "welcome": {
     "title": "Welcome to Dive AI",

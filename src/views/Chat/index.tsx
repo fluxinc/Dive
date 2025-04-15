@@ -51,13 +51,45 @@ const ChatWindow = () => {
         currentChatId.current = id
         document.title = `${data.data.chat.title} - Dive AI`
 
-        const convertedMessages = data.data.messages.map((msg: any) => ({
-          id: msg.messageId || msg.id || String(currentId.current++),
-          text: msg.content,
-          isSent: msg.role === "user",
-          timestamp: new Date(msg.createdAt).getTime(),
-          files: msg.files
-        }))
+        const convertedMessages = data.data.messages.map((msg: any) => {
+          // Process tool calls and sources in assistant messages
+          let processedContent = msg.content
+          
+          if (msg.role === "assistant" && msg.toolCalls && msg.toolCalls.length > 0) {
+            // Process tool calls
+            const toolName = msg.toolCalls
+              .map((call: any) => call.name || call.function?.name)
+              .filter(Boolean)
+              .join(", ")
+            
+            // Add tool call markup
+            if (toolName) {
+              const toolCallsJson = JSON.stringify(msg.toolCalls)
+              processedContent += `\n<tool-call name="${toolName}">##Tool Calls:${safeBase64Encode(toolCallsJson)}`
+              
+              // Add tool results if available
+              if (msg.toolResults && msg.toolResults.length > 0) {
+                processedContent += `##Tool Result:${safeBase64Encode(JSON.stringify(msg.toolResults))}</tool-call>\n`
+              } else {
+                processedContent += `</tool-call>\n`
+              }
+            }
+          }
+          
+          // Process source URLs if available
+          if (msg.role === "assistant" && msg.sources && msg.sources.length > 0) {
+            const sourceUrlsList = msg.sources
+            processedContent += `\n<data-source>${safeBase64Encode(JSON.stringify(sourceUrlsList))}</data-source>\n`
+          }
+          
+          return {
+            id: msg.messageId || msg.id || String(currentId.current++),
+            text: processedContent,
+            isSent: msg.role === "user",
+            timestamp: new Date(msg.createdAt).getTime(),
+            files: msg.files
+          }
+        })
 
         setMessages(convertedMessages)
       }
@@ -300,8 +332,21 @@ const ChatWindow = () => {
               case "tool_result":
                 const result = data.content as ToolResult
 
-                toolCallResults.current = toolCallResults.current.replace(`</tool-call>\n`, "")
-                toolCallResults.current += `##Tool Result:${safeBase64Encode(JSON.stringify(result.result))}</tool-call>\n`
+                // Check for source URLs in the tool result
+                const sourcesResult = result.result.content.find((item: any) => item.text.startsWith("<SOURCES>"))
+                if (result.name === 'query' && sourcesResult) {
+                  // Source URLs are in the form of <SOURCES>url1\nurl2\nurl3</SOURCES>
+                  const sourceUrlsList = sourcesResult.text.replace("<SOURCES>", "").replace("</SOURCES>", "").trim().split("\n")
+                  const resultWithoutSources = result.result.content.filter((item: any) => !item.text.startsWith("<SOURCES>"))
+                  // Add source URLs as a data-source element
+                  currentText += `\n<data-source>${safeBase64Encode(JSON.stringify(sourceUrlsList))}</data-source>\n`
+                  
+                  toolCallResults.current = toolCallResults.current.replace(`</tool-call>\n`, "")
+                  toolCallResults.current += `##Tool Result:${safeBase64Encode(JSON.stringify(resultWithoutSources))}</tool-call>\n`
+                } else {
+                  toolCallResults.current = toolCallResults.current.replace(`</tool-call>\n`, "")
+                  toolCallResults.current += `##Tool Result:${safeBase64Encode(JSON.stringify(result.result))}</tool-call>\n`
+                }
 
                 setMessages(prev => {
                   const newMessages = [...prev]

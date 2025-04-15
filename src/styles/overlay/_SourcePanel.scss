@@ -1,0 +1,51 @@
+@use "../generated-theme" as *;
+
+.source-panel {
+  margin: 10px 0;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border-weak);
+  background: var(--bg-op-dark-extremeweak);
+
+  summary {
+    cursor: pointer;
+    user-select: none;
+    font-weight: 500;
+    color: var(--text-inverted-weak);
+    padding: 8px 12px;
+    
+    &:hover {
+      background: var(--bg-op-dark-ultraweak);
+    }
+  }
+
+  .source-content {
+    padding: 15px;
+    border-top: 1px solid var(--border-weak);
+    max-height: 300px;
+    overflow: auto;
+
+    .source-list {
+      margin: 0;
+      padding: 0 0 0 20px;
+      
+      li {
+        margin-bottom: 8px;
+        
+        &:last-child {
+          margin-bottom: 0;
+        }
+        
+        a {
+          color: var(--text-link);
+          word-break: break-all;
+          text-decoration: none;
+          
+          &:hover {
+            text-decoration: underline;
+          }
+        }
+      }
+    }
+  }
+} 

@@ -14,6 +14,9 @@ export const messages = sqliteTable("messages", {
   messageId: text("message_id").notNull(),
   createdAt: text("created_at").notNull(),
   files: text("files", { mode: "json" }).notNull(),
+  toolCalls: text("tool_calls", { mode: "json" }),
+  toolResults: text("tool_results", { mode: "json" }),
+  sources: text("sources", { mode: "json" }),
 });
 
 // export types

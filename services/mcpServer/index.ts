@@ -22,6 +22,11 @@ export class MCPServerManager implements IMCPServerManager {
   private prevConfig: Record<string, iServerConfig> = {};
   public configPath: string;
 
+  // Add these properties to store tool calls, results, and sources for each chat
+  private chatToolCalls = new Map<string, any[]>();
+  private chatToolResults = new Map<string, any[]>();
+  private chatSources = new Map<string, string[]>();
+
   private constructor(configPath?: string) {
     this.configPath = configPath || path.join(process.cwd(), "config.json");
   }
@@ -379,4 +384,65 @@ export class MCPServerManager implements IMCPServerManager {
   //   logger.info("Reconnect all MCP servers completed");
   //   return errorArray;
   // }
+
+  // Add methods to track tool calls for each chat
+  public trackToolCall(chatId: string, toolCall: any) {
+    if (!this.chatToolCalls.has(chatId)) {
+      this.chatToolCalls.set(chatId, []);
+    }
+    this.chatToolCalls.get(chatId)!.push(toolCall);
+  }
+
+  public trackToolResult(chatId: string, toolResult: any) {
+    if (!this.chatToolResults.has(chatId)) {
+      this.chatToolResults.set(chatId, []);
+    }
+    this.chatToolResults.get(chatId)!.push(toolResult);
+    
+    // If this is a query tool with sources, extract and track them
+    if (toolResult.name === 'query' && toolResult.result && toolResult.result.content) {
+      const sourcesResult = toolResult.result.content.find((item: any) => item.text && item.text.startsWith("<SOURCES>"));
+      if (sourcesResult) {
+        const sourceUrls = sourcesResult.text
+          .replace("<SOURCES>", "")
+          .replace("</SOURCES>", "")
+          .trim()
+          .split("\n")
+          .filter(Boolean);
+        
+        this.trackSources(chatId, sourceUrls);
+      }
+    }
+  }
+
+  public trackSources(chatId: string, sources: string[]) {
+    if (!this.chatSources.has(chatId)) {
+      this.chatSources.set(chatId, []);
+    }
+    
+    // Add unique sources only
+    const existingSources = this.chatSources.get(chatId)!;
+    const newSources = sources.filter(source => !existingSources.includes(source));
+    if (newSources.length > 0) {
+      this.chatSources.set(chatId, [...existingSources, ...newSources]);
+    }
+  }
+
+  public getLastToolCalls(chatId: string): any[] | null {
+    return this.chatToolCalls.get(chatId) || null;
+  }
+
+  public getLastToolResults(chatId: string): any[] | null {
+    return this.chatToolResults.get(chatId) || null;
+  }
+
+  public getLastSources(chatId: string): string[] | null {
+    return this.chatSources.get(chatId) || null;
+  }
+
+  public clearChatData(chatId: string) {
+    this.chatToolCalls.delete(chatId);
+    this.chatToolResults.delete(chatId);
+    this.chatSources.delete(chatId);
+  }
 }

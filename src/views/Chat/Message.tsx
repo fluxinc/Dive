@@ -16,14 +16,18 @@ import { useTranslation } from 'react-i18next'
 import { themeAtom } from "../../atoms/themeState";
 import Textarea from "../../components/WrappedTextarea"
 import { isChatStreamingAtom } from "../../atoms/chatState"
-import { devModeAtom } from "../../atoms/devModeState"
 import { DevModeOnlyComponent } from "../../components/DevModeOnlyComponent"
+import SourcePanel from "./SourcePanel"
+
 declare global {
   namespace JSX {
     interface IntrinsicElements {
       "tool-call": {
         children: any
         name: string
+      };
+      "data-source": {
+        children: any
       };
     }
   }
@@ -51,7 +55,6 @@ const Message = ({ messageId, text, isSent, files, isError, isLoading, onRetry, 
   const [content, setContent] = useState(text)
   const [editedText, setEditedText] = useState(text)
   const isChatStreaming = useAtomValue(isChatStreamingAtom)
-  const isDevMode = useAtomValue(devModeAtom)
   const copyToClipboard = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text)
@@ -160,6 +163,20 @@ const Message = ({ messageId, text, isSent, files, isError, isLoading, onRetry, 
               } />
             )
           },
+          "data-source"({children}) {
+            let content = children
+            if (typeof children !== "string") {
+              if (!Array.isArray(children) || children.length === 0 || typeof children[0] !== "string") {
+                return <></>
+              }
+
+              content = children[0]
+            }
+
+            return (
+              <SourcePanel content={content} />
+            )
+          },
           a(props) {
             return (
               <a href={props.href} target="_blank" rel="noreferrer">
@@ -244,7 +261,7 @@ const Message = ({ messageId, text, isSent, files, isError, isLoading, onRetry, 
                 </SyntaxHighlighter>
               </div>
             )
-          }
+          },
         }}
       >
         {_text.replaceAll("file://", "https://localfile")}

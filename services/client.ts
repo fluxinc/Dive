@@ -173,6 +173,11 @@ export class MCPClient {
           content: result,
           files: [],
           createdAt: new Date().toISOString(),
+          // Store tool calls and results information
+          toolCalls: serverManager.getLastToolCalls(chat_id) || [],
+          toolResults: serverManager.getLastToolResults(chat_id) || [],
+          // Store sources if available
+          sources: serverManager.getLastSources(chat_id) || [],
         },
         {
           LLM_Model: {
