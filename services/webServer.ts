@@ -19,6 +19,7 @@ import { handleUploadFiles } from "./utils/fileHandler.js";
 import logger from "./utils/logger.js";
 import { iQueryInput, iStreamMessage, ModelSettings } from "./utils/types.js";
 import envPaths from "env-paths";
+import * as cheerio from "cheerio";
 
 interface FileProcessingResult {
   images: string[];
@@ -373,6 +374,57 @@ export class WebServer {
         res.json({
           success: false,
           message: (error as Error).message,
+        });
+      }
+    });
+
+    // Add website title fetching endpoint
+    this.app.get("/api/fetch-title", async (req, res) => {
+      try {
+        const url = req.query.url as string;
+        
+        if (!url) {
+          return res.status(400).json({
+            success: false,
+            message: "URL parameter is required",
+          });
+        }
+        
+        // Fetch the webpage content
+        const response = await axios.get(url, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (compatible; DiveRAG/1.0)',
+            'Accept': 'text/html'
+          },
+          timeout: 5000,
+          maxRedirects: 3
+        });
+        
+        // Parse the HTML and extract the title
+        const $ = cheerio.load(response.data);
+        let title = $('title').text().trim();
+        
+        // If no title, try to find open graph title
+        if (!title) {
+          title = $('meta[property="og:title"]').attr('content') || '';
+        }
+        
+        // If still no title, use the domain name
+        if (!title) {
+          const urlObj = new URL(url);
+          title = urlObj.hostname.replace('www.', '');
+        }
+        
+        return res.json({
+          success: true,
+          title: title
+        });
+      } catch (error) {
+        logger.error(`Error fetching title: ${(error as Error).message}`);
+        return res.status(500).json({
+          success: false,
+          message: "Failed to fetch title",
+          error: (error as Error).message
         });
       }
     });
