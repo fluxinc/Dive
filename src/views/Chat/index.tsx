@@ -78,8 +78,23 @@ const ChatWindow = () => {
           
           // Process source URLs if available
           if (msg.role === "assistant" && msg.sources && msg.sources.length > 0) {
-            const sourceUrlsList = msg.sources
-            processedContent += `\n<data-source>${safeBase64Encode(JSON.stringify(sourceUrlsList))}</data-source>\n`
+            // Convert from various source formats to a consistent structure
+            const normalizedSources = msg.sources.map((source: any) => {
+              // If source is already an object with url property
+              if (typeof source === 'object' && source.url) {
+                return {
+                  filename: source.filename || '',
+                  url: source.url
+                };
+              }
+              // If source is a plain string (just a URL)
+              return {
+                filename: '',
+                url: source
+              };
+            });
+            
+            processedContent += `\n<data-source>${safeBase64Encode(JSON.stringify(normalizedSources))}</data-source>\n`
           }
           
           return {
@@ -335,8 +350,17 @@ const ChatWindow = () => {
                 // Check for source URLs in the tool result
                 const sourcesResult = result.result.content.find((item: any) => item.type == "text" && item.text?.startsWith("<SOURCES>"))
                 if (result.name === 'query' && sourcesResult) {
-                  // Source URLs are in the form of <SOURCES>url1\nurl2\nurl3</SOURCES>
-                  const sourceUrlsList = sourcesResult.text.replace("<SOURCES>", "").replace("</SOURCES>", "").trim().split("\n")
+                  // Source URLs are in the form of <SOURCES><FILENAME>filename1</FILENAME>url1\n<FILENAME>filename2</FILENAME>url2\n<FILENAME>filename3</FILENAME>url3</SOURCES>
+                  const sourcesList = sourcesResult.text.replace("<SOURCES>", "").replace("</SOURCES>", "").trim().split("\n")
+                  const sourceUrlsList = sourcesList.map((item: string) => {
+                    const splitSource = item.split("</FILENAME>")
+                    const filename = splitSource[0].slice("<FILENAME>".length)
+                    const url = splitSource[1]
+                    return {
+                      filename,
+                      url
+                    }
+                  })
                   const resultWithoutSources = result.result.content.filter((item: any) => !item.text?.startsWith("<SOURCES>"))
                   // Add source URLs as a data-source element
                   currentText += `\n<data-source>${safeBase64Encode(JSON.stringify(sourceUrlsList))}</data-source>\n`
