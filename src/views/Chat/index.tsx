@@ -333,11 +333,11 @@ const ChatWindow = () => {
                 const result = data.content as ToolResult
 
                 // Check for source URLs in the tool result
-                const sourcesResult = result.result.content.find((item: any) => item.text.startsWith("<SOURCES>"))
+                const sourcesResult = result.result.content.find((item: any) => item.type == "text" && item.text?.startsWith("<SOURCES>"))
                 if (result.name === 'query' && sourcesResult) {
                   // Source URLs are in the form of <SOURCES>url1\nurl2\nurl3</SOURCES>
                   const sourceUrlsList = sourcesResult.text.replace("<SOURCES>", "").replace("</SOURCES>", "").trim().split("\n")
-                  const resultWithoutSources = result.result.content.filter((item: any) => !item.text.startsWith("<SOURCES>"))
+                  const resultWithoutSources = result.result.content.filter((item: any) => !item.text?.startsWith("<SOURCES>"))
                   // Add source URLs as a data-source element
                   currentText += `\n<data-source>${safeBase64Encode(JSON.stringify(sourceUrlsList))}</data-source>\n`
                   
