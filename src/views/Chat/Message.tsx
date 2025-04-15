@@ -126,8 +126,12 @@ const Message = ({ messageId, text, isSent, files, isError, isLoading, onRetry, 
 
   const formattedText = useMemo(() => {
     const _text = isSent ? content : text
+    
+    // Clean text for rendering (remove data-source tags)
+    const cleanedText = isSent ? _text : _text.replace(/<data-source>.*?<\/data-source>/s, '');
+    
     if (isSent) {
-      const splitText = _text.split("\n")
+      const splitText = cleanedText.split("\n")
       return splitText.map((line, i) => (
         <React.Fragment key={i}>
           {line}
@@ -163,19 +167,9 @@ const Message = ({ messageId, text, isSent, files, isError, isLoading, onRetry, 
               } />
             )
           },
-          "data-source"({children}) {
-            let content = children
-            if (typeof children !== "string") {
-              if (!Array.isArray(children) || children.length === 0 || typeof children[0] !== "string") {
-                return <></>
-              }
-
-              content = children[0]
-            }
-
-            return (
-              <SourcePanel content={content} />
-            )
+          "data-source"() {
+            // Return empty fragment - we handle this separately
+            return <></>
           },
           a(props) {
             return (
@@ -264,10 +258,24 @@ const Message = ({ messageId, text, isSent, files, isError, isLoading, onRetry, 
           },
         }}
       >
-        {_text.replaceAll("file://", "https://localfile")}
+        {cleanedText.replaceAll("file://", "https://localfile")}
       </ReactMarkdown>
     )
   }, [content, text, isSent, isLoading])
+
+  // Extract source content if present
+  const sourcePanel = useMemo(() => {
+    if (isSent) return null;
+    
+    const _text = text;
+    const sourceMatch = /<data-source>(.*?)<\/data-source>/s.exec(_text);
+    
+    if (sourceMatch && sourceMatch[1]) {
+      return <SourcePanel content={sourceMatch[1]} />;
+    }
+    
+    return null;
+  }, [isSent, text]);
 
   if (isEditing) {
     return (
@@ -283,6 +291,7 @@ const Message = ({ messageId, text, isSent, files, isError, isLoading, onRetry, 
     <div className="message-container">
       <div className={`message ${isSent ? "sent" : "received"} ${isError ? "error" : ""}`}>
         {formattedText}
+        {sourcePanel}
         {files && files.length > 0 && <FilePreview files={files} />}
         {isLoading && (
           <div className="loading-dots">
