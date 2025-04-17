@@ -1,6 +1,6 @@
 import React, { useRef, useState, useCallback, useEffect } from "react"
 import { useLocation, useNavigate, useParams } from "react-router-dom"
-import ChatMessages, { Message } from "./ChatMessages"
+import ChatMessages, { Message, Source } from "./ChatMessages"
 import ChatInput from "./ChatInput"
 import CodeModal from './CodeModal'
 import { useAtom, useSetAtom } from 'jotai'
@@ -76,10 +76,11 @@ const ChatWindow = () => {
             }
           }
           
-          // Process source URLs if available
+          // Process source URLs if available - we'll store them directly in the message object
+          let messageSources;
           if (msg.role === "assistant" && msg.sources && msg.sources.length > 0) {
             // Convert from various source formats to a consistent structure
-            const normalizedSources = msg.sources.map((source: any) => {
+            messageSources = msg.sources.map((source: any) => {
               // If source is already an object with url property
               if (typeof source === 'object' && source.url) {
                 return {
@@ -93,8 +94,6 @@ const ChatWindow = () => {
                 url: source
               };
             });
-            
-            processedContent += `\n<data-source>${safeBase64Encode(JSON.stringify(normalizedSources))}</data-source>\n`
           }
           
           return {
@@ -102,7 +101,8 @@ const ChatWindow = () => {
             text: processedContent,
             isSent: msg.role === "user",
             timestamp: new Date(msg.createdAt).getTime(),
-            files: msg.files
+            files: msg.files,
+            sources: messageSources
           }
         })
 
@@ -128,9 +128,9 @@ const ChatWindow = () => {
 
   useEffect(() => {
     if (messages.length > 0 && !isChatStreaming) {
-      setLastMessage(messages[messages.length - 1].text)
+      setLastMessage(messages[messages.length - 1].text);
     }
-  }, [messages, setLastMessage, isChatStreaming])
+  }, [messages, setLastMessage, isChatStreaming]);
 
   useEffect(() => {
     if (chatId && chatId !== currentChatId.current) {
@@ -204,9 +204,10 @@ const ChatWindow = () => {
       let newMessages = [...prev]
       const messageIndex = newMessages.findIndex(msg => msg.id === messageId)
       if (messageIndex !== -1) {
-        prevMessages = newMessages[messageIndex]
+        prevMessages = {...newMessages[messageIndex]}
         prevMessages.text = ""
         prevMessages.isError = false
+        // Keep the sources from the original message
         newMessages = newMessages.slice(0, messageIndex)
       }
       return newMessages
@@ -238,9 +239,10 @@ const ChatWindow = () => {
       let newMessages = [...prev]
       const messageIndex = newMessages.findIndex(msg => msg.id === messageId)
       if (messageIndex !== -1) {
-        prevMessages = newMessages[messageIndex + 1]
+        prevMessages = {...newMessages[messageIndex + 1]}
         prevMessages.text = ""
         prevMessages.isError = false
+        // Keep the sources from the original message
         newMessages = newMessages.slice(0, messageIndex+1)
       }
       return newMessages
@@ -346,13 +348,16 @@ const ChatWindow = () => {
 
               case "tool_result":
                 const result = data.content as ToolResult
+                
+                // Variable to store sources for the current message
+                let messageSourceList: Source[] | undefined = undefined
 
                 // Check for source URLs in the tool result
                 const sourcesResult = result.result.content.find((item: any) => item.type == "text" && item.text?.startsWith("<SOURCES>"))
                 if (result.name === 'query' && sourcesResult) {
                   // Source URLs are in the form of <SOURCES><FILENAME>filename1</FILENAME>url1\n<FILENAME>filename2</FILENAME>url2\n<FILENAME>filename3</FILENAME>url3</SOURCES>
                   const sourcesList = sourcesResult.text.replace("<SOURCES>", "").replace("</SOURCES>", "").trim().split("\n")
-                  const sourceUrlsList = sourcesList.map((item: string) => {
+                  const sourceUrlsList: Source[] = sourcesList.map((item: string) => {
                     if (item.includes("</FILENAME>")) {
                       const splitSource = item.split("</FILENAME>")
                       const filename = splitSource[0].slice("<FILENAME>".length)
@@ -370,9 +375,10 @@ const ChatWindow = () => {
                     }
                   })
                   
+                  // Store sources for use outside this block
+                  messageSourceList = sourceUrlsList
+                  
                   const resultWithoutSources = result.result.content.filter((item: any) => !item.text?.startsWith("<SOURCES>"))
-                  // Add source URLs as a data-source element
-                  currentText += `\n<data-source>${safeBase64Encode(JSON.stringify(sourceUrlsList))}</data-source>\n`
                   
                   toolCallResults.current = toolCallResults.current.replace(`</tool-call>\n`, "")
                   toolCallResults.current += `##Tool Result:${safeBase64Encode(JSON.stringify(resultWithoutSources))}</tool-call>\n`
@@ -383,7 +389,12 @@ const ChatWindow = () => {
 
                 setMessages(prev => {
                   const newMessages = [...prev]
+                  // Add the current message text along with tool results and source data
                   newMessages[newMessages.length - 1].text = currentText + toolCallResults.current.replace("%name%", result.name)
+                  // Store the sources in the message object if available
+                  if (messageSourceList) {
+                    newMessages[newMessages.length - 1].sources = messageSourceList
+                  }
                   return newMessages
                 })
 

@@ -10,6 +10,12 @@ export interface Message {
   timestamp: number
   files?: File[]
   isError?: boolean
+  sources?: Source[]
+}
+
+export interface Source {
+  filename: string,
+  url: string
 }
 
 interface Props {
@@ -67,6 +73,7 @@ const ChatMessages = ({ messages, isLoading, onRetry, onEdit }: Props) => {
           isError={message.isError}
           isLoading={!message.isSent && index === messages.length - 1 && isLoading}
           messageId={message.id}
+          sources={message.sources}
           onRetry={() => onRetry(message.id)}
           onEdit={(newText: string) => onEdit(message.id, newText)}
         />

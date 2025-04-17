@@ -18,6 +18,8 @@ import Textarea from "../../components/WrappedTextarea"
 import { isChatStreamingAtom } from "../../atoms/chatState"
 import { DevModeOnlyComponent } from "../../components/DevModeOnlyComponent"
 import SourcePanel from "./SourcePanel"
+import { safeBase64Encode } from "../../util"
+import { Source } from "./ChatMessages"
 
 declare global {
   namespace JSX {
@@ -25,9 +27,6 @@ declare global {
       "tool-call": {
         children: any
         name: string
-      };
-      "data-source": {
-        children: any
       };
     }
   }
@@ -41,11 +40,12 @@ interface MessageProps {
   files?: (File | string)[]
   isError?: boolean
   isLoading?: boolean
+  sources?: Source[]
   onRetry: () => void
   onEdit: (editedText: string) => void
 }
 
-const Message = ({ messageId, text, isSent, files, isError, isLoading, onRetry, onEdit }: MessageProps) => {
+const Message = ({ messageId, text, isSent, files, isError, isLoading, sources, onRetry, onEdit }: MessageProps) => {
   const { t } = useTranslation()
   const [theme] = useAtom(themeAtom)
   const updateStreamingCode = useSetAtom(codeStreamingAtom)
@@ -127,11 +127,8 @@ const Message = ({ messageId, text, isSent, files, isError, isLoading, onRetry, 
   const formattedText = useMemo(() => {
     const _text = isSent ? content : text
     
-    // Clean text for rendering (remove data-source tags)
-    const cleanedText = isSent ? _text : _text.replace(/<data-source>.*?<\/data-source>/s, '');
-    
     if (isSent) {
-      const splitText = cleanedText.split("\n")
+      const splitText = _text.split("\n")
       return splitText.map((line, i) => (
         <React.Fragment key={i}>
           {line}
@@ -166,10 +163,6 @@ const Message = ({ messageId, text, isSent, files, isError, isLoading, onRetry, 
                 />
               } />
             )
-          },
-          "data-source"() {
-            // Return empty fragment - we handle this separately
-            return <></>
           },
           a(props) {
             return (
@@ -258,7 +251,7 @@ const Message = ({ messageId, text, isSent, files, isError, isLoading, onRetry, 
           },
         }}
       >
-        {cleanedText.replaceAll("file://", "https://localfile")}
+        {_text.replaceAll("file://", "https://localfile")}
       </ReactMarkdown>
     )
   }, [content, text, isSent, isLoading])
@@ -267,15 +260,13 @@ const Message = ({ messageId, text, isSent, files, isError, isLoading, onRetry, 
   const sourcePanel = useMemo(() => {
     if (isSent) return null;
     
-    const _text = text;
-    const sourceMatch = /<data-source>(.*?)<\/data-source>/s.exec(_text);
-    
-    if (sourceMatch && sourceMatch[1]) {
-      return <SourcePanel content={sourceMatch[1]} />;
+    // Only use sources directly from props
+    if (sources && sources.length > 0) {
+      return <SourcePanel content={safeBase64Encode(JSON.stringify(sources))} />;
     }
     
     return null;
-  }, [isSent, text]);
+  }, [isSent, sources]);
 
   if (isEditing) {
     return (

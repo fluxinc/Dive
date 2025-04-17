@@ -45,7 +45,14 @@ const SourcePanel: React.FC<SourcePanelProps> = ({ content }) => {
           }
         }
         
-        return sources.sort((a : SourceItem, b : SourceItem) => a.filename?.localeCompare(b.filename || '') || 0)
+        return sources.sort((a : SourceItem, b : SourceItem) => {
+          const aName = a.filename || a.url
+          const bName = b.filename || b.url
+          if (!aName && !bName) return 0;
+          if (!aName) return 1;
+          if (!bName) return -1;
+          return aName.localeCompare(bName);
+        })
       }
     } catch (e) {
       console.error("Error parsing source items:", e)
@@ -70,10 +77,23 @@ const SourcePanel: React.FC<SourcePanelProps> = ({ content }) => {
       }
     })
 
-    // Filter out duplicate urls and filenames
+    // Filter out duplicate urls only
     const uniqueSources: SourceItem[] = _sources.filter((source: SourceItem, index: number, self: SourceItem[]) =>
-      index === self.findIndex((t: SourceItem) => t.url === source.url || t.filename === source.filename)
+      index === self.findIndex((t: SourceItem) => t.url === source.url)
     );
+
+    // Sort sources by filename
+    uniqueSources.sort((a: SourceItem, b: SourceItem) => {
+      const aName = a.filename || a.url;
+      const bName = b.filename || b.url;
+      if (!aName && !bName) return 0;
+      if (!aName) return 1;
+      if (!bName) return -1;
+      return aName.localeCompare(bName);
+    });
+    
+    // For debugging - log the sources order
+    console.log("Sources after sorting:", uniqueSources.map(s => s.filename || s.url));
 
     return uniqueSources;
   }, [sourceItems])
@@ -94,10 +114,19 @@ const SourcePanel: React.FC<SourcePanelProps> = ({ content }) => {
       <div className="source-content">
         <ul className="source-list">
           {sources.map((source: SourceItem, index: number) => {
+            // Count how many times this filename has appeared before
+            const duplicateCount = sources.slice(0, index)
+              .filter(s => s.filename === source.filename).length;
+            
+            // If this is a duplicate filename, add a number
+            const displayName = source.filename ? 
+              (duplicateCount > 0 ? `${source.filename} (${duplicateCount + 1})` : source.filename) : 
+              source.url;
+            
             return (
               <li key={index}>
                 <a href={source.url} target="_blank" rel="noreferrer" title={source.url}>
-                  {source.filename || source.url}
+                  {displayName}
                 </a>
               </li>
             )
