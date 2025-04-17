@@ -45,7 +45,7 @@ const SourcePanel: React.FC<SourcePanelProps> = ({ content }) => {
           }
         }
         
-        return sources
+        return sources.sort((a : SourceItem, b : SourceItem) => a.filename?.localeCompare(b.filename || '') || 0)
       }
     } catch (e) {
       console.error("Error parsing source items:", e)
