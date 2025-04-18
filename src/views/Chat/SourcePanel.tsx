@@ -92,9 +92,6 @@ const SourcePanel: React.FC<SourcePanelProps> = ({ content }) => {
       return aName.localeCompare(bName);
     });
     
-    // For debugging - log the sources order
-    console.log("Sources after sorting:", uniqueSources.map(s => s.filename || s.url));
-
     return uniqueSources;
   }, [sourceItems])
 
