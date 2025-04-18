@@ -138,7 +138,15 @@
     "defaultInstructions": "speak in English",
     "autoDownload": "Auto Download Update",
     "autoLaunch": "Run Dive AI on System Startup",
-    "minimalToTray": "Minimize to System Tray"
+    "minimalToTray": "Minimize to System Tray",
+    "clearAllChats": "Clear Chat History",
+    "clearAllChatsButton": "Clear All",
+    "clearAllChatsConfirmTitle": "Clear All Chat History?",
+    "clearAllChatsConfirmDescription": "This will permanently delete all your chat history. This action cannot be undone.",
+    "clearAllChatsSuccess": "All chat history cleared successfully",
+    "clearAllChatsPartial": "Cleared {{success}} chats, failed to clear {{fail}} chats",
+    "clearAllChatsFailed": "Failed to clear chat history",
+    "noChatHistoryToDelete": "No chat history to delete"
   },
   "toast": {
     "copiedToClipboard": "Copied to clipboard"

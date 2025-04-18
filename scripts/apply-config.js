@@ -46,7 +46,7 @@ try {
   
   // Apply to :root (default theme)
   scssContent += ':root {\n';
-  Object.entries(styleConfig).forEach(([key, value]) => {
+  Object.entries(styleConfig.light).forEach(([key, value]) => {
     scssContent += `  --${key}: ${value};\n`;
   });
   // Add text variables
@@ -55,9 +55,9 @@ try {
   scssContent += `  --welcome-subtitle: "${welcomeSubtitle}";\n`;
   scssContent += '}\n\n';
   
-  // Apply to dark theme as well to ensure it overrides everywhere
+  // Apply dark theme
   scssContent += '[data-theme="dark"],\n:root:has([data-theme="dark"]) {\n';
-  Object.entries(styleConfig).forEach(([key, value]) => {
+  Object.entries(styleConfig.dark).forEach(([key, value]) => {
     scssContent += `  --${key}: ${value};\n`;
   });
   // Add text variables

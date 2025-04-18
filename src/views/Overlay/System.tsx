@@ -1,4 +1,4 @@
-import { useAtom } from "jotai"
+import { useAtom, useSetAtom } from "jotai"
 import { useTranslation } from "react-i18next"
 import Select from "../../components/Select"
 import { closeOverlayAtom } from "../../atoms/layerState"
@@ -7,6 +7,12 @@ import React, { useState, useEffect } from "react"
 import ThemeSwitch from "../../components/ThemeSwitch"
 import Switch from "../../components/Switch"
 import { getAutoDownload, setAutoDownload as _setAutoDownload } from "../../updater"
+import PopupConfirm from "../../components/PopupConfirm"
+import { showToastAtom } from "../../atoms/toastState"
+import { historiesAtom, loadHistoriesAtom } from "../../atoms/historyState"
+import { useAtomValue } from "jotai"
+import { useNavigate } from "react-router-dom"
+import { currentChatIdAtom } from "../../atoms/chatState"
 
 const System = () => {
   const { t, i18n } = useTranslation()
@@ -15,6 +21,12 @@ const System = () => {
   const [autoDownload, setAutoDownload] = useState(false)
   const [autoLaunch, setAutoLaunch] = useState(false)
   const [minimalToTray, setMinimalToTray] = useState(false)
+  const [showClearAllChatsConfirm, setShowClearAllChatsConfirm] = useState(false)
+  const showToast = useSetAtom(showToastAtom)
+  const histories = useAtomValue(historiesAtom)
+  const loadHistories = useSetAtom(loadHistoriesAtom)
+  const navigate = useNavigate()
+  const setCurrentChatId = useSetAtom(currentChatIdAtom)
 
   useEffect(() => {
     window.ipcRenderer.getAutoLaunch().then(setAutoLaunch)
@@ -65,6 +77,84 @@ const System = () => {
   const handleMinimalToTrayChange = (value: boolean) => {
     setMinimalToTray(value)
     window.ipcRenderer.setMinimalToTray(value)
+  }
+
+  const handleOpenClearAllChatsConfirm = () => {
+    // Check if there are no chats to delete
+    if (histories.length === 0) {
+      showToast({
+        message: t("system.noChatHistoryToDelete"),
+        type: "info"
+      })
+      return
+    }
+    setShowClearAllChatsConfirm(true)
+  }
+
+  const handleClearAllChats = async () => {
+    try {
+      let successCount = 0
+      let failCount = 0
+
+      // Delete each chat one by one
+      for (const chat of histories) {
+        try {
+          // Delete from the database
+          const response = await fetch(`/api/chat/${chat.id}`, {
+            method: "DELETE"
+          })
+          const data = await response.json()
+          
+          if (data.success) {
+            // Also clear MCP server data for this chat
+            try {
+              await fetch(`/api/mcp/clear/${chat.id}`, {
+                method: "POST"
+              })
+            } catch (_) {
+              // Continue even if MCP clear fails, as the main DB deletion was successful
+            }
+            successCount++
+          } else {
+            failCount++
+          }
+        } catch (_error) {
+          failCount++
+        }
+      }
+
+      // Navigate to home if currently in a chat
+      navigate("/")
+      setCurrentChatId("")
+      
+      // Refresh the chat history list
+      loadHistories()
+      
+      // Show success/failure message
+      if (failCount === 0) {
+        showToast({
+          message: t("system.clearAllChatsSuccess"),
+          type: "success"
+        })
+      } else if (successCount > 0) {
+        showToast({
+          message: t("system.clearAllChatsPartial", { success: successCount, fail: failCount }),
+          type: "warning"
+        })
+      } else {
+        showToast({
+          message: t("system.clearAllChatsFailed"),
+          type: "error"
+        })
+      }
+    } catch (_error) {
+      showToast({
+        message: t("system.clearAllChatsFailed"),
+        type: "error"
+      })
+    } finally {
+      setShowClearAllChatsConfirm(false)
+    }
   }
 
   return (
@@ -152,8 +242,45 @@ const System = () => {
               />
             </div>
           </div>
+
+          {/* clear all chats */}
+          <div className="system-list-section">
+            <div className="system-list-content">
+              <span className="system-list-name">{t("system.clearAllChats")}:</span>
+            </div>
+            <div className="system-list-switch-container">
+              <button 
+                className="clear-all-chats-btn"
+                onClick={handleOpenClearAllChatsConfirm}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"></path>
+                </svg>
+                {t("system.clearAllChatsButton")}
+              </button>
+            </div>
+          </div>
         </div>
       </div>
+
+      {/* Confirmation dialog for clearing all chats */}
+      {showClearAllChatsConfirm && (
+        <PopupConfirm
+          title={t("system.clearAllChatsConfirmTitle")}
+          confirmText={t("common.confirm")}
+          cancelText={t("common.cancel")}
+          onConfirm={handleClearAllChats}
+          onCancel={() => setShowClearAllChatsConfirm(false)}
+          onClickOutside={() => setShowClearAllChatsConfirm(false)}
+          noBorder
+          footerType="center"
+          zIndex={1000}
+        >
+          <div className="clear-all-chats-confirm-content">
+            <p>{t("system.clearAllChatsConfirmDescription")}</p>
+          </div>
+        </PopupConfirm>
+      )}
     </div>
   )
 }

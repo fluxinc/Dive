@@ -55,4 +55,39 @@
       }
     }
   }
+  
+  .clear-all-chats-btn {
+    background-color: var(--bg-error);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 16px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    
+    svg {
+      width: 16px;
+      height: 16px;
+      stroke: currentColor;
+    }
+    
+    &:hover {
+      background-color: var(--bg-hover-error);
+    }
+  }
+}
+
+.clear-all-chats-confirm-content {
+  text-align: center;
+  padding: 0 16px;
+  
+  p {
+    margin: 0;
+    color: var(--text);
+    font-size: 14px;
+  }
 }
