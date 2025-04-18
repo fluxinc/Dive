@@ -1,10 +1,21 @@
 {
   "style": {
-    "example": "Use this section to override variables in src/styles/_variables.scss",
-    "bg": "#ffffff",
-    "text": "#213547",
-    "border": "#d9d9d9",
-    "shadow": "rgba(0, 0, 0, 0.1)"
+    "dark": {
+      "bg": "#894167",
+      "bg-weak": "#3f3f3f",
+      "text-weak": "rgba(255, 255, 255, 0.7)",
+      "text-inverted-weak": "rgba(255, 255, 255, 0.5)",
+      "text-link": "#e0d0e3",
+      "text-link-hover": "#ffffff"
+    },
+    "light": {
+      "bg": "#f8f0f5",
+      "bg-weak": "#f2e6ee",
+      "text-weak": "rgba(0, 0, 0, 0.7)",
+      "text-inverted-weak": "rgba(0, 0, 0, 0.5)",
+      "text-link": "#894167",
+      "text-link-hover": "#632d4a"
+    }
   },
   "text": {
     "title": "Example title",

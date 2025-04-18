@@ -1,9 +1,21 @@
 {
   "style": {
-    "bg": "#894167",
-    "bg-weak": "#3f3f3f",
-    "text-weak": "#b8b8b8",
-    "text-inverted-weak": "#b8b8b8"
+    "dark": {
+      "bg": "#894167",
+      "bg-weak": "#3f3f3f",
+      "text-weak": "rgba(255, 255, 255, 0.7)",
+      "text-inverted-weak": "rgba(255, 255, 255, 0.5)",
+      "text-link": "#e0d0e3",
+      "text-link-hover": "#ffffff"
+    },
+    "light": {
+      "bg": "#f8f0f5",
+      "bg-weak": "#f2e6ee",
+      "text-weak": "rgba(0, 0, 0, 0.7)",
+      "text-inverted-weak": "rgba(0, 0, 0, 0.5)",
+      "text-link": "#894167",
+      "text-link-hover": "#632d4a"
+    }
   },
   "text": {
     "title": "DenseBreastInfo.org chatbot",
@@ -11,4 +23,4 @@
     "subtitle": "Start the conversation"
   },
   "prompt": "You are a helpful assistant that answers questions about the medical concept of \"dense breasts\". Your main source of information is a database of documents that relate to dense breasts. You fetch information from this database by calling the query tool with the user's query. Whenever a user asks a question relating to the topic, first use the query tool to get information from the database. If you do not get any data you may use your own knowledge base, but be sure to inform the user of that. You check the status of the database server by using the health tool, but do not use the health tool before any other tools. If you make a tool call to the query, you will pass the user's message with no changes, and you will directly return the tool's response with no changes."
-} 
+}
