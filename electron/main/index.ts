@@ -12,7 +12,7 @@ import { ipcHandler } from "./ipc"
 import { initTray } from "./tray"
 import { store } from "./store"
 import { initProtocol } from "./protocol"
-
+import fs from 'fs';
 const require = createRequire(import.meta.url)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -75,8 +75,11 @@ async function onReady() {
 }
 
 async function createWindow() {
+  const themeConfigPath = path.join(process.env.APP_ROOT, "config/theme.config.json");
+  const themeConfig = JSON.parse(fs.readFileSync(themeConfigPath, 'utf8'));
+  
   win = new BrowserWindow({
-    title: "Dive AI",
+    title: themeConfig.windowTitle || "AI assistant",
     icon: path.join(process.env.VITE_PUBLIC, "favicon.ico"),
     minHeight: 320,
     minWidth: 400,

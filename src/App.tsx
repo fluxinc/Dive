@@ -6,6 +6,7 @@ import { useEffect, useState } from "react"
 import { handleGlobalHotkey, loadHotkeyMapAtom } from "./atoms/hotkeyState"
 import { systemThemeAtom } from "./atoms/themeState"
 import Updater from "./updater"
+import WindowTitle from "./components/WindowTitle"
 
 function App() {
   const [loading, setLoading] = useState(true)
@@ -46,6 +47,7 @@ function App() {
 
   return (
     <>
+      <WindowTitle />
       <RouterProvider router={router} />
       <Updater />
     </>

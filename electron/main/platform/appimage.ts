@@ -2,6 +2,9 @@ import fse from "fs-extra"
 import path from "path"
 import { execSync } from "child_process"
 
+const appRoot = process.env.APP_ROOT || process.cwd()
+const windowTitle = JSON.parse(fse.readFileSync(path.join(appRoot, "config/theme.config.json"), "utf8")).windowTitle;
+
 export function setAppImageAutoLaunch(enable: boolean) {
   if (!process.env.APPIMAGE) {
     return false
@@ -57,7 +60,7 @@ export function getAppImageDesktopFile() {
   const desktopFile = path.join(process.env.VITE_PUBLIC, "linux", "dive-ai.desktop")
   const content = fse.existsSync(desktopFile) ? fse.readFileSync(desktopFile, "utf-8") : `[Desktop Entry]
 Type=Application
-Name=Dive AI
+Name=${windowTitle}
 Exec=%EXEC%
 Icon=%ICON%
 StartupNotify=false

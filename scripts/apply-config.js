@@ -11,6 +11,8 @@ const __dirname = path.dirname(__filename);
 // Read the config file
 const configPath = path.join(__dirname, '../config/theme.config.json');
 const styleOutputPath = path.join(__dirname, '../src/styles/_generated-theme.scss');
+const indexHtmlPath = path.join(__dirname, '../index.html');
+const translationPath = path.join(__dirname, '../public/locales/en/translation.json');
 
 const packageJson = JSON.parse(fse.readFileSync(path.join(__dirname, '../package.json'), 'utf8'));
 const appName = packageJson.name;
@@ -24,9 +26,19 @@ try {
   const textConfig = config.text || {};
   
   // Set default text values if not provided
-  const title = textConfig.title || 'Dive AI';
+  const title = textConfig.title || 'AI Assistant';
   const welcomeMessage = textConfig.welcomeMessage || 'Welcome';
   const welcomeSubtitle = textConfig.subtitle || 'Start your AI conversation';
+
+  // Update index.html title
+  let indexHtml = fse.readFileSync(indexHtmlPath, 'utf8');
+  indexHtml = indexHtml.replace(/<title>.*?<\/title>/, `<title>${title}</title>`);
+  fse.writeFileSync(indexHtmlPath, indexHtml);
+
+  // Update translation.json title
+  let translation = JSON.parse(fse.readFileSync(translationPath, 'utf8'));
+  translation.header.title = title;
+  fse.writeFileSync(translationPath, JSON.stringify(translation, null, 2));
 
   // Save the user prompt
   fse.writeFileSync(customRulesPath, prompt);

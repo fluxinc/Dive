@@ -10,6 +10,7 @@ import { showToastAtom } from "../../atoms/toastState"
 import { useTranslation } from "react-i18next"
 import { currentChatIdAtom, isChatStreamingAtom, lastMessageAtom } from "../../atoms/chatState"
 import { safeBase64Encode } from "../../util"
+import { windowTitleAtom } from "../../atoms/windowState"
 
 interface ToolCall {
   name: string
@@ -40,6 +41,7 @@ const ChatWindow = () => {
   const toolCallResults = useRef<string>("")
   const toolResultCount = useRef(0)
   const toolResultTotal = useRef(0)
+  const setWindowTitle = useSetAtom(windowTitleAtom)
 
   const loadChat = useCallback(async (id: string) => {
     try {
@@ -49,7 +51,7 @@ const ChatWindow = () => {
 
       if (data.success) {
         currentChatId.current = id
-        document.title = `${data.data.chat.title} - Dive AI`
+        setWindowTitle(`${data.data.chat.title} - AI Assistant`)
 
         const convertedMessages = data.data.messages.map((msg: any) => {
           // Process tool calls and sources in assistant messages
@@ -409,7 +411,7 @@ const ChatWindow = () => {
                 break
 
               case "chat_info":
-                document.title = `${data.content.title} - Dive AI`
+                document.title = `${data.content.title} - AI Assistant`
                 currentChatId.current = data.content.id
                 navigate(`/chat/${data.content.id}`, { replace: true })
                 break

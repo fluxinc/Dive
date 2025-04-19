@@ -12,6 +12,8 @@ import Textarea from "../components/WrappedTextarea"
 import Tooltip from "../components/Tooltip"
 import { loadToolsAtom, toolsAtom } from "../atoms/toolState"
 import { DevModeOnlyComponent } from "../components/DevModeOnlyComponent"
+import { windowTitleAtom } from "../atoms/windowState"
+
 const formatFileSize = (bytes: number) => {
   if (bytes === 0)
     return "0 Bytes"
@@ -38,11 +40,12 @@ const Welcome = () => {
   const loadTools = useSetAtom(loadToolsAtom)
   const tools = useAtomValue(toolsAtom)
   const hasActiveConfig = useAtomValue(isConfigActiveAtom)
+  const setWindowTitle = useSetAtom(windowTitleAtom)
 
   useEffect(() => {
-    document.title = t("header.title")
-    loadTools()
-  }, [])
+    setWindowTitle(t("header.title"));
+    loadTools();
+  }, []);
 
   useEffect(() => {
     updateStreamingCode(null)
