@@ -16,6 +16,7 @@ import Dropdown from "../../../components/DropDown"
 import Tooltip from "../../../components/Tooltip"
 import KeyPopupEdit from "./KeyPopupEdit"
 import { systemThemeAtom, userThemeAtom } from "../../../atoms/themeState"
+import ImageResource from "../../../components/ImageResource"
 
 const PageLayout = () => {
   const { t } = useTranslation()
@@ -296,7 +297,7 @@ const PageLayout = () => {
               {multiModelConfigList?.map((multiModelConfig: MultiModelConfig, index: number) => (
                 <div className="providers-list-item" key={`multiModelConfig-${index}`}>
                   <div className="provider">
-                    <img
+                    <ImageResource
                       src={PROVIDER_ICONS[multiModelConfig.name as InterfaceProvider]}
                       alt={multiModelConfig.name}
                       className={`provider-icon ${isProviderIconNoFilter(multiModelConfig.name as InterfaceProvider) ? "no-filter" : ""}`}

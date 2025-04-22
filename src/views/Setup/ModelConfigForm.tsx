@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react"
+import React, { useState, useEffect, useRef, useCallback } from "react"
 import { useTranslation } from "react-i18next"
 import { FieldDefinition, InterfaceProvider, PROVIDER_LABELS, PROVIDERS } from "../../atoms/interfaceState"
 import { InterfaceModelConfig, MCPServerConfig, prepareModelConfig, verifyModelWithConfig, ModelConfig, saveFirstConfigAtom, writeEmptyConfigAtom, writeMCPConfigAtom } from "../../atoms/configState"

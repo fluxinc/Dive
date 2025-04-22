@@ -22,6 +22,7 @@ const System = () => {
   const [autoLaunch, setAutoLaunch] = useState(false)
   const [minimalToTray, setMinimalToTray] = useState(false)
   const [showClearAllChatsConfirm, setShowClearAllChatsConfirm] = useState(false)
+  const [isElectron, setIsElectron] = useState(false)
   const showToast = useSetAtom(showToastAtom)
   const histories = useAtomValue(historiesAtom)
   const loadHistories = useSetAtom(loadHistoriesAtom)
@@ -29,13 +30,18 @@ const System = () => {
   const setCurrentChatId = useSetAtom(currentChatIdAtom)
 
   useEffect(() => {
-    window.ipcRenderer.getAutoLaunch().then(setAutoLaunch)
-    window.ipcRenderer.getMinimalToTray().then(setMinimalToTray)
+    import("../../platform").then(({ platform }) => {
+      setIsElectron(platform.isElectron)
+      platform.getAutoLaunch().then(setAutoLaunch)
+      platform.getMinimalToTray().then(setMinimalToTray)
+    })
   }, [])
 
   const handleAutoLaunchChange = (value: boolean) => {
     setAutoLaunch(value)
-    window.ipcRenderer.setAutoLaunch(value)
+    import("../../platform").then(({ platform }) => {
+      platform.setAutoLaunch(value)
+    })
   }
 
   const languageOptions = [
@@ -77,7 +83,9 @@ const System = () => {
 
   const handleMinimalToTrayChange = (value: boolean) => {
     setMinimalToTray(value)
-    window.ipcRenderer.setMinimalToTray(value)
+    import("../../platform").then(({ platform }) => {
+      platform.setMinimalToTray(value)
+    })
   }
 
   const handleOpenClearAllChatsConfirm = () => {
@@ -203,10 +211,11 @@ const System = () => {
           </div>
 
           {/* auto download */}
-          <div className="system-list-section">
-            <div className="system-list-content">
-              <span className="system-list-name">{t("system.autoDownload")}:</span>
-            </div>
+          {isElectron && (
+            <div className="system-list-section">
+              <div className="system-list-content">
+                <span className="system-list-name">{t("system.autoDownload")}:</span>
+              </div>
             <div className="system-list-switch-container">
               <Switch
                 checked={autoDownload}
@@ -215,34 +224,39 @@ const System = () => {
                   _setAutoDownload(e.target.checked)
                 }}
               />
+              </div>
             </div>
-          </div>
+          )}
 
-          {/* auto launch */}
-          <div className="system-list-section">
-            <div className="system-list-content">
-              <span className="system-list-name">{t("system.autoLaunch")}:</span>
+          {/* auto launch - only show in Electron mode */}
+          {isElectron && (
+            <div className="system-list-section">
+              <div className="system-list-content">
+                <span className="system-list-name">{t("system.autoLaunch")}:</span>
+              </div>
+              <div className="system-list-switch-container">
+                <Switch
+                  checked={autoLaunch}
+                  onChange={e => handleAutoLaunchChange(e.target.checked)}
+                />
+              </div>
             </div>
-            <div className="system-list-switch-container">
-              <Switch
-                checked={autoLaunch}
-                onChange={e => handleAutoLaunchChange(e.target.checked)}
-              />
-            </div>
-          </div>
+          )}
 
-          {/* minimal to tray */}
-          <div className="system-list-section">
-            <div className="system-list-content">
-              <span className="system-list-name">{t("system.minimalToTray")}:</span>
+          {/* minimal to tray - only show in Electron mode */}
+          {isElectron && (
+            <div className="system-list-section">
+              <div className="system-list-content">
+                <span className="system-list-name">{t("system.minimalToTray")}:</span>
+              </div>
+              <div className="system-list-switch-container">
+                <Switch
+                  checked={minimalToTray}
+                  onChange={e => handleMinimalToTrayChange(e.target.checked)}
+                />
+              </div>
             </div>
-            <div className="system-list-switch-container">
-              <Switch
-                checked={minimalToTray}
-                onChange={e => handleMinimalToTrayChange(e.target.checked)}
-              />
-            </div>
-          </div>
+          )}
 
           {/* clear all chats */}
           <div className="system-list-section">

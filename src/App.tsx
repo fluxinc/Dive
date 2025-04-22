@@ -1,13 +1,16 @@
 import { RouterProvider } from "react-router-dom"
 import { router } from "./router"
-import { useSetAtom } from 'jotai'
-import { loadConfigAtom } from './atoms/configState'
+import { useSetAtom } from "jotai"
+import { loadConfigAtom } from "./atoms/configState"
 import { useEffect, useState } from "react"
 import { handleGlobalHotkey, loadHotkeyMapAtom } from "./atoms/hotkeyState"
 import { handleWindowResizeAtom } from "./atoms/sidebarState"
 import { systemThemeAtom } from "./atoms/themeState"
 import Updater from "./updater"
 import WindowTitle from "./components/WindowTitle"
+
+// Check if we're running in Electron
+const isElectron = typeof window !== "undefined" && typeof window.ipcRenderer !== "undefined"
 
 function App() {
   const [loading, setLoading] = useState(true)
@@ -52,7 +55,7 @@ function App() {
     <>
       <WindowTitle />
       <RouterProvider router={router} />
-      <Updater />
+      {isElectron && <Updater />}
     </>
   )
 }

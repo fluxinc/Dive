@@ -4,15 +4,26 @@ import { useCallback, useEffect, useState } from "react"
 import { newVersionAtom } from "../atoms/globalState"
 import { useAtomValue } from "jotai"
 
+// Check if we're running in Electron
+const isElectron = typeof window !== "undefined" && typeof window.ipcRenderer !== "undefined"
+
 export default function useUpdateProgress(onComplete: () => void, onError: (e: { message: string, error: Error }) => void) {
   const [progress, setProgress] = useState(0)
   const newVersion = useAtomValue(newVersionAtom)
 
   useEffect(() => {
+    if (!isElectron) {
+      return
+    }
+
     window.ipcRenderer.invoke("check-update")
   }, [])
 
   const update = useCallback(async () => {
+    if (!isElectron) {
+      return
+    }
+    
     if (window.PLATFORM === "darwin") {
       window.open("https://github.com/OpenAgentPlatform/Dive/releases/latest", "_blank")
       return
@@ -43,7 +54,7 @@ export default function useUpdateProgress(onComplete: () => void, onError: (e: {
   }, [onError])
 
   useEffect(() => {
-    if (getAutoDownload()) {
+    if (!isElectron || getAutoDownload()) {
       setProgress(0)
       return
     }

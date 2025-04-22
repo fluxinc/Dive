@@ -9,6 +9,7 @@ import { openOverlayAtom } from "../atoms/layerState"
 import { showToastAtom } from "../atoms/toastState"
 import Tooltip from "./Tooltip"
 import { systemThemeAtom, userThemeAtom } from "../atoms/themeState"
+import ImageResource from "./ImageResource"
 
 function optionMask(model: { name: string; provider: string }) {
   const preText = !model.provider.startsWith("ollama") ? "***" : ""
@@ -73,7 +74,7 @@ const ModelSelect = () => {
           value: model.key,
           label: (
               <div className="model-select-label" key={model.key}>
-              <img
+              <ImageResource
                 src={PROVIDER_ICONS[model.provider.replace("-", "_") as keyof typeof PROVIDER_ICONS]}
                 alt={model.provider}
                 className={`model-select-label-icon ${isProviderIconNoFilter(model.provider) ? "no-filter" : ""}`}

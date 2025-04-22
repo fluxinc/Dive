@@ -5,6 +5,9 @@ import { newVersionAtom } from "./atoms/globalState"
 export const getAutoDownload = () => !!localStorage.getItem("autoDownload")
 export const setAutoDownload = (value: boolean) => localStorage.setItem("autoDownload", value?"1":"")
 
+// Check if we're running in Electron
+const isElectron = typeof window !== "undefined" && typeof window.ipcRenderer !== "undefined"
+
 export default function Updater() {
   const setNewVersion = useSetAtom(newVersionAtom)
   const newVersion = useRef("")
@@ -17,8 +20,8 @@ export default function Updater() {
     newVersion.current = arg.newVersion
 
     const autoDownload = getAutoDownload()
-    if (window.PLATFORM !== "darwin" && autoDownload) {
-      window.ipcRenderer.invoke("start-download")
+    if (window.PLATFORM !== "darwin" && autoDownload && isElectron) {
+      window.ipcRenderer?.invoke("start-download")
       return
     }
 
@@ -31,8 +34,12 @@ export default function Updater() {
     }
   }, [setNewVersion])
 
-  // listen new version
+  // listen new version only in electron environment
   useEffect(() => {
+    if (!isElectron) {
+      return
+    }
+
     window.ipcRenderer.on("update-can-available", handleUpdateAvailable)
     window.ipcRenderer.on("update-downloaded", handleUpdateDownloaded)
 
@@ -40,7 +47,7 @@ export default function Updater() {
       window.ipcRenderer.off("update-can-available", handleUpdateAvailable)
       window.ipcRenderer.off("update-downloaded", handleUpdateDownloaded)
     }
-  }, [handleUpdateAvailable])
+  }, [handleUpdateAvailable, handleUpdateDownloaded])
 
   return null
 }

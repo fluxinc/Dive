@@ -1,11 +1,9 @@
 import { atom, getDefaultStore } from "jotai"
 import merge from "lodash/merge"
-import { closeAllSidebarsAtom, toggleSidebarAtom } from "./sidebarState"
-import { router } from "../router"
+import { sidebarVisibleAtom } from "./sidebarState"
 import mitt from "mitt"
-import { closeAllOverlaysAtom, popLayerAtom } from "./layerState"
-import { toggleKeymapModalAtom } from "./modalState"
-import { currentChatIdAtom } from "./chatState"
+import platform from "../platform"
+import { nanoid } from "nanoid"
 
 export const ChatInputHotkeyEvent = [
     "chat-input:submit",
@@ -185,7 +183,7 @@ export function handleGlobalHotkey(e: KeyboardEvent) {
   }
 
   if (event && event.startsWith("global:")) {
-    return store.set(handleGlobalEventAtom, event, e)
+    return store.set(handleGlobalEventAtom, event)
   }
 
   if (event) {
@@ -193,27 +191,32 @@ export function handleGlobalHotkey(e: KeyboardEvent) {
   }
 }
 
-const handleGlobalEventAtom = atom(
-  null,
-  (get, set, event: GlobalHotkeyEvent, e: KeyboardEvent) => {
-    switch (event) {
-      case "global:close-layer":
-        const lastLayer = set(popLayerAtom)
-        if (lastLayer) {
-          e.stopImmediatePropagation()
-        }
-        break
+export const handleGlobalEventAtom = atom(
+  null, 
+  (get, set, action: GlobalHotkeyEvent) => {
+    const modals = get(modalsAtom)
+
+    switch (action) {
       case "global:new-chat":
-        set(closeAllSidebarsAtom)
-        set(closeAllOverlaysAtom)
-        set(currentChatIdAtom, "")
-        router.navigate("/")
+        set(activeConversationIdAtom, nanoid())
         break
       case "global:toggle-sidebar":
-        set(toggleSidebarAtom)
+        set(sidebarVisibleAtom, !get(sidebarVisibleAtom))
         break
+      case "global:close-layer": {
+        if (modals.keymap) {
+          set(modalsAtom, { ...modals, keymap: false })
+        } else if (modals.settings) {
+          set(modalsAtom, { ...modals, settings: false })
+        } else {
+          set(selectedMessagesAtom, {})
+        }
+        break
+      }
       case "global:toggle-keymap-modal":
-        set(toggleKeymapModalAtom)
+        set(modalsAtom, { ...modals, keymap: !modals.keymap })
+        break
+      default:
         break
     }
   }
@@ -225,10 +228,32 @@ export const rawKeymapAtom = atom<Record<string, string>>({})
 export const loadHotkeyMapAtom = atom(
   null,
   async (get, set) => {
-    const rawMap = await window.ipcRenderer.getHotkeyMap()
-    const map = getHotkeyMap(rawMap)
-    set(rawKeymapAtom, rawMap)
-    set(hotKeymapAtom, map)
+    try {
+      const rawMap = await platform.getHotkeyMap()
+      if (!rawMap) {
+        throw new Error("Failed to get hotkey map from platform")
+      }
+      const map = getHotkeyMap(rawMap)
+      set(rawKeymapAtom, rawMap)
+      set(hotKeymapAtom, map)
+    } catch (error) {
+      console.error("Error loading hotkey map:", error)
+      // Provide default hotkey map as fallback
+      const defaultMap = {
+        "chat-input:submit": "<c-s-m>",
+        "chat-input:upload-file": "<c-p>",
+        "chat-input:focus": "<c-l>",
+        "chat-input:paste-last-message": "<c-y>",
+        "chat-message:copy-last": "<c-c>",
+        "chat:delete": "<c-d>",
+        "global:new-chat": "<c-n>",
+        "global:toggle-sidebar": "<c-b>",
+        "global:close-layer": "Escape",
+        "global:toggle-keymap-modal": "<c-/>"
+      }
+      set(rawKeymapAtom, defaultMap)
+      set(hotKeymapAtom, getHotkeyMap(defaultMap))
+    }
   }
 )
 
@@ -240,13 +265,13 @@ export const getHotkeyEventAtom = atom(
       return null
     }
 
-    let _map
+    let _map = map
     for (const key of keys) {
       if (!_map) {
-        _map = map[key]
-      } else {
-        _map = _map[key]
+        return null
       }
+      
+      _map = _map[key]
 
       if (!_map) {
         return null
@@ -266,3 +291,12 @@ export const getHotkeyEventAtom = atom(
     return undefined
   }
 )
+
+// Define the missing atoms
+export const activeConversationIdAtom = atom("")
+export const conversationsAtom = atom({})
+export const modalsAtom = atom({
+  keymap: false,
+  settings: false
+})
+export const selectedMessagesAtom = atom({})

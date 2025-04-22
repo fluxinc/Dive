@@ -4,15 +4,17 @@ import "./index.css"
 import "./styles/index.scss"
 import App from "./App.tsx"
 import "./i18n"
+import platform from "./platform"
 
-if (window.ipcRenderer) {
+// Only needed in Electron environment
+if (platform.isElectron) {
   const port = await new Promise<number>((resolve) => {
-    window.ipcRenderer.onReceivePort((port) => {
+    window.ipcRenderer.onReceivePort((port: number) => {
       resolve(port)
     })
 
     const i = setInterval(() => {
-      window.ipcRenderer.port().then(port => {
+      window.ipcRenderer.port().then((port: number) => {
         if (+port) {
           resolve(port)
           clearInterval(i)
@@ -37,26 +39,33 @@ if (window.ipcRenderer) {
       },
     })
   }
-
-  window.PLATFORM = await window.ipcRenderer.getPlatform() as any
 }
+
+// Get platform before rendering
+const platformType = await platform.getPlatform()
+window.PLATFORM = platformType as any
 
 // wait for host to start
 await new Promise(resolve => {
   const i = setInterval(() => {
-    fetch("/api/ping").then(() => {
+    // Use /api/config/model instead of /api/ping since we verified it exists
+    fetch("/api/config/model").then(() => {
+      console.log("API server is ready")
       resolve(0)
       clearInterval(i)
+    }).catch(err => {
+      console.log("Waiting for API server...", err)
     })
-  }, 50)
+  }, 1000)
 })
 
-window.addEventListener('contextmenu', (e) => {
+// Set up context menu handling
+window.addEventListener("contextmenu", (e) => {
   e.preventDefault()
   const selection = window.getSelection()?.toString()
 
   if (selection) {
-    window.ipcRenderer.showSelectionContextMenu()
+    platform.showSelectionContextMenu()
   }
 })
 
