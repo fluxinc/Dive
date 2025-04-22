@@ -208,7 +208,7 @@
       overflow-y: auto;
       background: var(--bg-weak);
       color: var(--text);
-
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
       @include scrollbar;
     }
   }
