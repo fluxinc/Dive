@@ -1,5 +1,24 @@
 @use "../generated-theme" as *;
 
+.outlet-container {
+  > .app-header {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    transition: width $transition-normal ease, left $transition-normal ease;
+
+    &.sidebar-visible {
+      width: calc(100% + $sidebar-width);
+      left: -$sidebar-width;
+
+      @media (max-width: $breakpoint-m) {
+        width: 100%;
+        left: 0;
+      }
+    }
+  }
+}
+
 .app-header {
   background: inherit;
 
@@ -31,13 +50,17 @@
         display: flex;
         align-items: center;
         gap: 16px;
-        position: relative;
+        white-space: nowrap;
       }
     }
 
     .right-side {
       display: flex;
       align-items: center;
+
+      @media (max-width: $breakpoint-s) {
+        display: none;
+      }
     }
   }
 

@@ -1,21 +1,35 @@
 @use "../generated-theme" as *;
 
 .history-sidebar {
-  position: fixed;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: $sidebar-width;
-  transform: translateX(-100%);
-  transition: transform $transition-normal ease;
+  width: 0;
+  max-height: 100vh;
+  overflow: hidden;
+  transition: width $transition-normal ease, transform $transition-normal ease;
   z-index: $z-sidebar;
   display: flex;
   flex-direction: column;
   background: var(--bg);
-  border-right: 1px solid var(--border-weak);
+  z-index: $z-overlay+1;
+
+  > * {
+    white-space: nowrap;
+  }
 
   &.visible {
-    transform: translateX(0);
+    width: $sidebar-width;
+    border-right: 1px solid var(--border-weak);
+  }
+
+  @media (max-width: $breakpoint-m) {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    transform: translateX(-100%);
+
+    &.visible {
+      transform: translateX(0);
+    }
   }
 
   .history-list {
@@ -30,10 +44,10 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 12px;
-    border-radius: 8px;
     cursor: pointer;
-    margin-bottom: 8px;
+    border-radius: 8px;
+    padding: 6px 6px 6px 10px;
+    margin-bottom: 4px;
 
     &:hover {
       background: var(--bg-op-dark-ultraweak);
@@ -54,7 +68,7 @@
 
       .history-title {
         font-weight: 500;
-        margin-bottom: 4px;
+        margin-bottom: 2px;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;

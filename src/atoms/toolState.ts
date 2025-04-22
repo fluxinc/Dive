@@ -17,6 +17,13 @@ export interface Tool {
 
 export const toolsAtom = atom<Tool[]>([])
 
+export const enabledToolsAtom = atom<Tool[]>(
+  (get, set) => {
+    const tools = get(toolsAtom)
+    return tools.filter((tool) => tool.enabled)
+  }
+)
+
 export const loadToolsAtom = atom(
   null,
   async (get, set) => {

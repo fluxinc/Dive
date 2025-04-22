@@ -25,7 +25,12 @@
     top: 0;
     width: calc(100vw - $sidebar-width);
     height: 100vh;
-    transition: left $transition-normal ease;
+    transition: left $transition-normal ease, width $transition-normal ease;
+
+    @media (max-width: $breakpoint-m) {
+      left: 0;
+      width: 100vw;
+    }
 
     &.full-width {
       left: 0;

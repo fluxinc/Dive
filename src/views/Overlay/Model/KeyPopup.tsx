@@ -8,13 +8,15 @@ import { useAtom } from "jotai"
 import React from "react"
 import { useModelsProvider } from "./ModelsProvider"
 import { formatData } from "../../../helper/config"
+import CheckBox from "../../../components/CheckBox"
+import Tooltip from "../../../components/Tooltip"
 
 const KeyPopup = ({
   onClose,
   onSuccess,
 }: {
   onClose: () => void
-  onSuccess: () => void
+  onSuccess: (customModelId?: string) => void
 }) => {
   const { t } = useTranslation()
   const [provider, setProvider] = useState<InterfaceProvider>(PROVIDERS[0])
@@ -22,15 +24,16 @@ const KeyPopup = ({
 
   const [formData, setFormData] = useState<InterfaceModelConfig>({active: true} as InterfaceModelConfig)
   const [errors, setErrors] = useState<Record<string, string>>({})
-  const [verifiedCnt, setVerifiedCnt] = useState(0)
+  const [customModelId, setCustomModelId] = useState<string>("")
+  const [verifyError, setVerifyError] = useState<string>("")
   const isVerifying = useRef(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [, showToast] = useAtom(showToastAtom)
+  const [showOptional, setShowOptional] = useState<Record<string, Record<string, boolean>>>({})
 
   const { multiModelConfigList, setMultiModelConfigList,
     saveConfig, prepareModelConfig,
-    fetchListOptions, setListOptions,
-    setCurrentIndex, verifyModel
+    fetchListOptions, setCurrentIndex
   } = useModelsProvider()
 
   useEffect(() => {
@@ -45,6 +48,7 @@ const KeyPopup = ({
     setFormData({active: true} as InterfaceModelConfig)
     setFields(defaultInterface[newProvider])
     setErrors({})
+    setVerifyError("")
   }
 
   const handleChange = (key: string, value: any) => {
@@ -54,10 +58,14 @@ const KeyPopup = ({
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
     Object.entries(fields).forEach(([key, field]) => {
-      if (field.required && !formData[key as keyof InterfaceModelConfig]) {
+      if (field.required && !formData[key as keyof InterfaceModelConfig] && key !== "customModelId") {
         newErrors[key] = t("setup.required")
       }
     })
+
+    if(fields["customModelId"]?.required && !customModelId) {
+      newErrors["customModelId"] = t("setup.required")
+    }
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors)
@@ -69,7 +77,7 @@ const KeyPopup = ({
   const handleSubmit = async (data: Record<string, any>) => {
     try {
       if (data.success) {
-        onSuccess()
+        onSuccess(customModelId)
       }
     } catch (error) {
       console.error("Failed to save config:", error)
@@ -84,7 +92,38 @@ const KeyPopup = ({
     if (!validateForm())
       return
 
-    const _formData = prepareModelConfig(formData, provider)
+    const __formData = {
+      ...formData,
+      baseURL: (!fields?.baseURL?.required && !showOptional[provider]?.["baseURL"]) ? "" : formData.baseURL
+    }
+
+    let existingIndex = -1
+    if(multiModelConfigList && multiModelConfigList.length > 0){
+      if (__formData.baseURL) {
+        if (__formData.apiKey) {
+          existingIndex = multiModelConfigList.findIndex(config =>
+            config.baseURL === __formData.baseURL &&
+            config.apiKey === __formData.apiKey
+          )
+        } else {
+          existingIndex = multiModelConfigList.findIndex(config =>
+            config.baseURL === __formData.baseURL
+          )
+        }
+      } else if (__formData.apiKey) {
+        existingIndex = multiModelConfigList.findIndex(config =>
+          config.apiKey === __formData.apiKey
+        )
+      }
+    }
+
+    if(existingIndex !== -1){
+      setCurrentIndex(existingIndex)
+      onSuccess()
+      return
+    }
+
+    const _formData = prepareModelConfig(__formData, provider)
     const multiModelConfig = {
       ...formatData(_formData),
       name: provider,
@@ -94,49 +133,49 @@ const KeyPopup = ({
 
     try {
       setErrors({})
+      setVerifyError("")
       setIsSubmitting(true)
-      setVerifiedCnt(0)
       isVerifying.current = true
 
-      const listOptions = await fetchListOptions(multiModelConfig, fields)
-
-      if (!listOptions?.length){
-        const newErrors: Record<string, string> = {}
-        newErrors["apiKey"] = t("models.apiKeyError")
-        setErrors(newErrors)
-        return
+      let newCustomModelId = customModelId
+      if(!fields["customModelId"]?.required && !showOptional[provider]?.["customModelId"]) {
+        newCustomModelId = ""
+        setCustomModelId(newCustomModelId)
       }
 
-      const verifiedList = []
-      for(const index in listOptions){
-        const verifyResult = await verifyModel(multiModelConfig, listOptions[index].name)
-        if(!isVerifying.current) {
+      //if custom model id is required, still need to check if the key is valid
+      if(!newCustomModelId || fields["customModelId"]?.required) {
+        const listOptions = await fetchListOptions(multiModelConfig, fields)
+
+        //if custom model id is required, it doesn't need to check if listOptions is empty
+        //because fetchListOptions in pre step will throw error if the key is invalid
+        if (!listOptions?.length && !fields["customModelId"]?.required){
+          const newErrors: Record<string, string> = {}
+          newErrors["apiKey"] = t("models.apiKeyError")
+          setErrors(newErrors)
           return
         }
-
-        if(verifyResult && verifyResult.success){
-          const options = JSON.parse(JSON.stringify(listOptions))
-          options[index].supportTools = verifyResult.supportTools
-          verifiedList.push(options[index])
-        }
-
-        setVerifiedCnt((Number(index)+1) / listOptions.length)
       }
 
-      sessionStorage.setItem(`model-list-${multiModelConfig.apiKey || multiModelConfig.baseURL}`, JSON.stringify(verifiedList))
-      setListOptions(verifiedList)
+      if(newCustomModelId) {
+        // save custom model list to local storage
+        const customModelList = localStorage.getItem("customModelList")
+        const allCustomModelList = customModelList ? JSON.parse(customModelList) : {}
+        localStorage.setItem("customModelList", JSON.stringify({
+          ...allCustomModelList,
+          [formData.accessKeyId || _formData.apiKey || _formData.baseURL]: [newCustomModelId]
+        }))
+      }
+
       setMultiModelConfigList([...(multiModelConfigList ?? []), multiModelConfig])
       setCurrentIndex((multiModelConfigList?.length ?? 0))
       const data = await saveConfig()
       await handleSubmit(data)
     } catch (error) {
-      const newErrors: Record<string, string> = {}
-      newErrors["apiKey"] = t("models.apiKeyError")
-      setErrors(newErrors)
+      setVerifyError((error as Error).message)
       setMultiModelConfigList(_multiModelConfigList)
     } finally {
       setIsSubmitting(false)
-      setVerifiedCnt(0)
       isVerifying.current = false
     }
   }
@@ -149,6 +188,14 @@ const KeyPopup = ({
       })
     }
     onClose()
+  }
+
+  const handleCopiedError = async (text: string) => {
+    await navigator.clipboard.writeText(text)
+    showToast({
+      message: t("toast.copiedToClipboard"),
+      type: "success"
+    })
   }
 
   return (
@@ -180,38 +227,82 @@ const KeyPopup = ({
           </select>
         </div>
         {Object.entries(fields).map(([key, field]) => (
-          key !== "model" && (
+          key !== "model" && key !== "customModelId" && (
             <div key={key} className="models-key-form-group">
               <label className="models-key-field-title">
                 <>
-                  {field.label}
+                  {(key === "baseURL" && !field.required) ?
+                    <div className="models-key-field-optional">
+                      <CheckBox
+                        checked={showOptional[provider]?.[key]}
+                        onChange={() => setShowOptional(prev => ({ ...prev, [provider]: { ...prev[provider], [key]: !prev[provider]?.[key] } }))}
+                      ></CheckBox>
+                      {`${field.label}${t("models.optional")}`}
+                    </div>
+                  : field.label}
                   {field.required && <span className="required">*</span>}
                 </>
                 <div className="models-key-field-description">{field.description}</div>
               </label>
-              <input
-                type={"text"}
-                value={formData[key as keyof ModelConfig] as string || ""}
-                onChange={e => handleChange(key, e.target.value)}
-                placeholder={field.placeholder?.toString()}
-                className={errors[key] ? "error" : ""}
-              />
+              {(showOptional[provider]?.[key] || key !== "baseURL" || field.required) && (
+                <input
+                  type={"text"}
+                  value={formData[key as keyof ModelConfig] as string || ""}
+                  onChange={e => handleChange(key, e.target.value)}
+                  placeholder={field.placeholder?.toString()}
+                  className={errors[key] ? "error" : ""}
+                />
+              )}
               {errors[key] && <div className="error-message">{errors[key]}</div>}
             </div>
           )
         ))}
-        {isVerifying.current && (
-          <div className="models-key-progress-wrapper">
-            {t("models.verifying")}
-            <div className="models-key-progress-container">
-              <div
-                className="models-key-progress"
-                style={{
-                  width: `${verifiedCnt * 100}%`
-                }}
-              />
+        <div className="models-key-form-group">
+          <label className="models-key-field-title">
+            {!fields["customModelId"]?.required ? (
+              <>
+                <div className="models-key-field-optional">
+                  <CheckBox
+                    checked={showOptional[provider]?.["customModelId"]}
+                    onChange={() =>
+                      setShowOptional(prev => ({
+                        ...prev,
+                        [provider]: { ...prev[provider], customModelId: !prev[provider]?.customModelId },
+                      }))
+                    }
+                  ></CheckBox>
+                  {`Custom Model ID${t("models.optional")}`}
+                </div>
+              </>
+            ) : (
+              <>
+                {`Custom Model ID`}<span className="required">*</span>
+              </>
+            )}
+          </label>
+          {(showOptional[provider]?.["customModelId"] || fields["customModelId"]?.required) && (
+            <input
+              type={"text"}
+              value={customModelId as string || ""}
+              onChange={e => setCustomModelId(e.target.value)}
+              placeholder={"YOUR_MODEL_ID"}
+              className={errors["customModelId"] ? "error" : ""}
+            />
+          )}
+          {errors["customModelId"] && <div className="error-message">{errors["customModelId"]}</div>}
+        </div>
+        {verifyError && (
+          <Tooltip content={t("models.copyContent")}>
+            <div onClick={() => handleCopiedError(verifyError)} className="error-message">
+              {verifyError}
+              <svg xmlns="http://www.w3.org/2000/svg" width="18px" height="18px" viewBox="0 0 22 22" fill="transparent">
+                <path d="M13 20H2V6H10.2498L13 8.80032V20Z" fill="transparent" stroke="currentColor" strokeWidth="2" strokeMiterlimit="10" strokeLinejoin="round"/>
+                <path d="M13 9H10V6L13 9Z" fill="currentColor" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M9 3.5V2H17.2498L20 4.80032V16H16" fill="transparent" stroke="currentColor" strokeWidth="2" strokeMiterlimit="10" strokeLinejoin="round"/>
+                <path d="M20 5H17V2L20 5Z" fill="currentColor" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
             </div>
-          </div>
+          </Tooltip>
         )}
       </div>
     </PopupConfirm>

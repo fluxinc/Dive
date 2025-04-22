@@ -23,6 +23,18 @@ export default tseslint.config(
         'warn',
         { allowConstantExport: true },
       ],
+      'semi': ['error', 'never'],
+      'curly': 'off',
+      'nonblock-statement-body-position': ['error', 'below'],
+      'brace-style': ['error', '1tbs', { 'allowSingleLine': false }],
+      'quotes': ['error', 'double'],
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-unused-vars': ['error', {
+        'argsIgnorePattern': '^_',
+        'varsIgnorePattern': '^_',
+        'caughtErrorsIgnorePattern': '^_',
+        'caughtErrors': 'all'
+      }],
     },
   },
 )

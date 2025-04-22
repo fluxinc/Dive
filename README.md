@@ -15,7 +15,7 @@
 
 Dive is an open-source MCP Host Desktop Application that seamlessly integrates with any LLMs supporting function calling capabilities. ✨
 
-![Dive Demo](./docs/DiveAI.gif)
+![Dive Demo](./docs/0.8.0_DiveGIF.gif)
 
 
 ## Features 🎯
@@ -23,16 +23,21 @@ Dive is an open-source MCP Host Desktop Application that seamlessly integrates w
 - 🌐 **Universal LLM Support**: Compatible with ChatGPT, Anthropic, Ollama and OpenAI-compatible models
 - 💻 **Cross-Platform**: Available for Windows, MacOS, and Linux
 - 🔄 **Model Context Protocol**: Enabling seamless MCP AI agent integration on both stdio and SSE mode
-- 🌍 **Multi-Language Support**: Traditional Chinese, Simplified Chinese, English, Spanish with more coming soon
+- 🌍 **Multi-Language Support**: Traditional Chinese, Simplified Chinese, English, Spanish, Japanese with more coming soon
 - ⚙️ **Advanced API Management**: Multiple API keys and model switching support
 - 💡 **Custom Instructions**: Personalized system prompts for tailored AI behavior
 - 🔄 **Auto-Update Mechanism**: Automatically checks for and installs the latest application updates
 
-## Recent updates(2025/3/14)
+## Recent updates(2025/4/21)
 
-- 🌍 **Spanish Translation**: Added Spanish language support
+- 🚀 **Dive MCP Host v0.8.0**: DiveHost rewritten in Python is now a separate project at [dive-mcp-host](https://github.com/OpenAgentPlatform/dive-mcp-host)
+- ⚙️ **Enhanced LLM Settings**: Add, modify, delete LLM Provider API Keys and custom Model IDs
+- 🔍 **Model Validation**: Validate or skip validation for models supporting Tool/Function calling
+- 🔧 **Improved MCP Configuration**: Add, edit, and delete MCP tools directly from the UI
+- 🌍 **Japanese Translation**: Added Japanese language support
 - 🤖 **Extended Model Support**: Added Google Gemini and Mistral AI models integration
 
+> **Important:** Due to DiveHost migration from TypeScript to Python in v0.8.0, configuration files and chat history records will not be automatically upgraded. If you need to access your old data after upgrading, you can still downgrade to a previous version.
 
 ## Download and Install ⬇️
 
@@ -137,7 +142,7 @@ See [BUILD.md](BUILD.md) for more details.
 
 ## Connect With Us 🌐
 - 💬 Join our [Discord](https://discord.com/invite/qceMERf4y2)
-- 🐦 Follow us on [Twitter/X](https://x.com/Dive_ai_agent)
+- 🐦 Follow us on [Twitter/X](https://x.com/Dive_ai_agent) [Reddit](https://www.reddit.com/user/BigGo_official/) [Thread](https://www.threads.net/@dive_mcpserver)
 - ⭐ Star us on GitHub
 - 🐛 Report issues on our [Issue Tracker](https://github.com/OpenAgentPlatform/Dive/issues)
 

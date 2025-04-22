@@ -42,3 +42,11 @@ bin
 resources/generated-prompt-wrapper.txt
 src/styles/_generated-theme.scss
 config/theme.config.json
+
+
+# for host
+requirements.txt
+host-deps/
+
+# development tmp files
+.config/

@@ -3,11 +3,13 @@
 
 .chat-page {
   display: flex;
+  flex: 1;
   justify-content: center;
   overflow: hidden;
   gap: 20px;
   padding: 0 $page-h-padding;
-  height: calc(100vh - $header-height);
+  height: 100vh;
+  padding-top: $header-height;
 }
 
 .chat-container {
@@ -30,6 +32,43 @@
   flex: 1;
   overflow: hidden;
   position: relative;
+
+  .scroll-to-bottom-btn {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    z-index: 1;
+    transform: translate(-50%, -100%);
+    width: 38px;
+    height: 38px;
+    padding: 8px;
+    background: var(--bg);
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+
+    &:hover {
+      background: var(--bg-ultraweak);
+    }
+
+    &:focus {
+      outline: none;
+    }
+
+    &.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+  }
+}
+
+.chat-messages-container {
+  display: flex;
+  flex: 1;
+  overflow: auto;
+  position: relative;
 }
 
 .chat-messages {
@@ -37,7 +76,7 @@
   overflow-y: auto;
   padding: 15px 15px 0;
   margin-bottom: 0;
-  padding-bottom: 45px;
+  padding-bottom: 85px;
 
   &::-webkit-scrollbar {
     width: 6px;
@@ -74,7 +113,7 @@
 
 .chat-input-wrapper {
   position: relative;
-  bottom: 20px;
+  bottom: 0;
   left: 0;
   right: 0;
   max-width: $chat-width;
@@ -91,7 +130,7 @@
     position: absolute;
     width: calc(100% - 20px);
     left: 10px;
-    top: 5px;
+    top: -15px;
     transform: translate(0, -100%);
     z-index: 1;
   }
@@ -111,6 +150,44 @@
   max-width: $chat-width;
   margin: 0 auto;
   width: 100%;
+
+  .drag-overlay {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    left: 0;
+    top: 0;
+    background: var(--bg);
+    border: 3px dashed var(--bg-hover-blue);
+    border-radius: 12px;
+    overflow: hidden;
+    z-index: 1;
+    display: none;
+
+    &.show {
+      display: block;
+    }
+
+    .drag-overlay-bg {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background: var(--bg-hover-blue);
+      opacity: 0.5;
+    }
+
+    .drag-overlay-text {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      pointer-events: none;
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      color: var(--text-pri-blue);
+    }
+  }
 
   .abort-btn {
     cursor: pointer;
@@ -282,7 +359,6 @@
 }
 
 .message {
-  width: max-content;
   max-width: 100%;
   margin: 10px 0;
   padding: 10px 15px;
@@ -459,12 +535,12 @@
           }
         }
       }
-      
+
       pre {
         margin: 0;
         padding: 12px;
         overflow-x: auto;
-        
+
         code {
           font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
           font-size: 14px;
@@ -582,9 +658,7 @@
 
 .code-modal {
   flex: 1;
-  height: calc(100vh - $header-height);
-  margin: auto 0;
-  max-width: calc(100vw - $chat-width - $page-h-padding * 2 - 20px);
+  height: 100vh;
 
   .code-modal-content {
     height: 100%;
@@ -592,7 +666,6 @@
     color: var(--text-light);
     display: flex;
     flex-direction: column;
-    border-radius: 8px;
     box-shadow: 0 4px 12px var(--shadow-modal);
 
     .code-modal-header {
@@ -615,12 +688,14 @@
         font-size: 24px;
         cursor: pointer;
         padding: 0 8px;
+        height: 22px;
 
         &:hover {
           color: var(--text-light);
         }
       }
 
+      .header-left,
       .header-right {
         display: flex;
         align-items: center;
@@ -632,8 +707,11 @@
           border-radius: 20px;
           padding: 4px;
           gap: 2px;
-          
+
           .tab-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
             outline: none;
             background: none;
             border: none;
@@ -643,12 +721,12 @@
             font-size: 14px;
             border-radius: 20px;
             transition: all 0.2s;
-            
+
             &:hover {
               color: #fff;
               background: rgba(255, 255, 255, 0.1);
             }
-            
+
             &.active {
               color: white;
               background: rgba(255, 255, 255, 0.15);
@@ -663,6 +741,25 @@
                 background: rgba(0, 0, 0, 0.15);
               }
             }
+
+            @media (max-width: $breakpoint-m) {
+              .tab-btn-text {
+                display: none;
+              }
+            }
+          }
+        }
+        .copy-btn {
+          background: none;
+          border: none;
+          color: #999;
+          padding: 0;
+          cursor: pointer;
+          font-size: 14px;
+          transition: all 0.2s;
+
+          &:hover {
+            color: #fff;
           }
         }
       }
@@ -672,12 +769,20 @@
       flex: 1;
       overflow: auto;
 
+      @include scrollbar;
+      &::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.2);
+      }
+
       pre {
         margin: 0 !important;
         border-radius: 0 !important;
         height: 100% !important;
 
         @include scrollbar;
+        &::-webkit-scrollbar-thumb {
+          background: rgba(255, 255, 255, 0.2);
+        }
       }
 
       .html-preview {
@@ -685,6 +790,11 @@
         height: 100%;
         border: none;
         background: transparent;
+      }
+
+      code {
+        word-break: break-all;
+        white-space: break-spaces !important;
       }
     }
 
@@ -716,6 +826,12 @@
         }
       }
     }
+  }
+
+  @media (max-width: $breakpoint-s) {
+    position: fixed;
+    width: 100vw;
+    z-index: 1;
   }
 }
 
@@ -841,4 +957,10 @@
   margin: 0.5em 0;
   background: rgba(255, 77, 79, 0.1);
   border-radius: 6px;
-} 
+}
+
+.think {
+  padding: 1em;
+  margin: 0.5em 0;
+  color: var(--text-weak);
+}

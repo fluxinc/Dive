@@ -35,10 +35,10 @@
   &[data-state=open] .arrow{
     transform: rotateX(180deg);
   }
-}
 
-.error{
-  outline: 1px solid var(--stroke-neg-medium);
+  &.error{
+    outline: 1px solid var(--stroke-neg-medium);
+  }
 }
 
 .right-slot{

@@ -94,34 +94,33 @@ export const defaultInterface: Record<InterfaceProvider, InterfaceDefinition> = 
       default: "",
       placeholder: "Select a model",
       listCallback: async (deps) => {
-        try {
-          return !deps.apiKey ? [] : await window.ipcRenderer.openaiModelList(deps.apiKey)
-        } catch (error) {
-          console.error(error)
-          return []
+        const results = await window.ipcRenderer.openaiModelList(deps.apiKey)
+        if (results.error) {
+          throw new Error(results.error)
         }
+        return results.results
       },
       listDependencies: ["apiKey"]
     },
   },
   openai_compatible: {
+    apiKey: {
+      type: "string",
+      inputType: "password",
+      label: "API Key",
+      description: "",
+      required: false,
+      default: "",
+      placeholder: "YOUR_API_KEY"
+    },
     baseURL: {
       type: "string",
       inputType: "text",
       label: "Base URL",
       description: "Base URL for API calls",
-      required: false,
-      default: "",
-      placeholder: ""
-    },
-    apiKey: {
-      type: "string",
-      inputType: "password",
-      label: "API Key",
-      description: "API Key",
-      required: false,
-      default: "",
-      placeholder: "YOUR_API_KEY"
+      required: true,
+      default: "https://api.openai.com",
+      placeholder: "https://api.openai.com"
     },
     model: {
       type: "list",
@@ -131,12 +130,11 @@ export const defaultInterface: Record<InterfaceProvider, InterfaceDefinition> = 
       default: "",
       placeholder: "Default model",
       listCallback: async (deps) => {
-        try {
-          return await window.ipcRenderer.openaiCompatibleModelList(deps.apiKey, deps.baseURL)
-        } catch (error) {
-          console.error(error)
-          return []
+        const results = await window.ipcRenderer.openaiCompatibleModelList(deps.apiKey, deps.baseURL)
+        if (results.error) {
+          throw new Error(results.error)
         }
+        return results.results
       },
       listDependencies: ["apiKey", "baseURL"]
     }
@@ -159,12 +157,11 @@ export const defaultInterface: Record<InterfaceProvider, InterfaceDefinition> = 
       default: "",
       placeholder: "Select a model",
       listCallback: async (deps) => {
-        try {
-          return await window.ipcRenderer.ollamaModelList(deps.baseURL)
-        } catch (error) {
-          console.error(error)
-          return []
+        const results = await window.ipcRenderer.ollamaModelList(deps.baseURL)
+        if (results.error) {
+          throw new Error(results.error)
         }
+        return results.results
       },
       listDependencies: ["baseURL"]
     },
@@ -196,12 +193,11 @@ export const defaultInterface: Record<InterfaceProvider, InterfaceDefinition> = 
       default: "",
       placeholder: "Select a model",
       listCallback: async (deps) => {
-        try {
-          return await window.ipcRenderer.anthropicModelList(deps.apiKey, deps.baseURL)
-        } catch (error) {
-          console.error(error)
-          return []
+        const results = await window.ipcRenderer.anthropicModelList(deps.apiKey, deps.baseURL)
+        if (results.error) {
+          throw new Error(results.error)
         }
+        return results.results
       },
       listDependencies: ["apiKey", "baseURL"]
     },
@@ -224,12 +220,11 @@ export const defaultInterface: Record<InterfaceProvider, InterfaceDefinition> = 
       default: "",
       placeholder: "Select a model",
       listCallback: async (deps) => {
-        try {
-          return await window.ipcRenderer.googleGenaiModelList(deps.apiKey)
-        } catch (error) {
-          console.error(error)
-          return []
+        const results = await window.ipcRenderer.googleGenaiModelList(deps.apiKey)
+        if (results.error) {
+          throw new Error(results.error)
         }
+        return results.results
       },
       listDependencies: ["apiKey"]
     },
@@ -252,12 +247,11 @@ export const defaultInterface: Record<InterfaceProvider, InterfaceDefinition> = 
       default: "",
       placeholder: "Select a model",
       listCallback: async (deps) => {
-        try {
-          return await window.ipcRenderer.mistralaiModelList(deps.apiKey)
-        } catch (error) {
-          console.error(error)
-          return []
+        const results = await window.ipcRenderer.mistralaiModelList(deps.apiKey)
+        if (results.error) {
+          throw new Error(results.error)
         }
+        return results.results
       },
       listDependencies: ["apiKey"]
     },
@@ -268,7 +262,7 @@ export const defaultInterface: Record<InterfaceProvider, InterfaceDefinition> = 
       inputType: "password",
       label: "AWS Access Key ID",
       description: "",
-      required: false,
+      required: true,
       default: "",
       placeholder: "YOUR_AWS_ACCESS_KEY_ID"
     },
@@ -277,7 +271,7 @@ export const defaultInterface: Record<InterfaceProvider, InterfaceDefinition> = 
       inputType: "password",
       label: "AWS Secret Access Key",
       description: "",
-      required: false,
+      required: true,
       default: "",
       placeholder: "YOUR_AWS_SECRET_ACCESS_KEY"
     },
@@ -307,14 +301,20 @@ export const defaultInterface: Record<InterfaceProvider, InterfaceDefinition> = 
       default: "",
       placeholder: "Select a model",
       listCallback: async (deps) => {
-        try {
-          return await window.ipcRenderer.bedrockModelList(deps.accessKeyId, deps.secretAccessKey, deps.sessionToken, deps.region)
-        } catch (error) {
-          console.error(error)
-          return []
+        const results = await window.ipcRenderer.bedrockModelList(deps.accessKeyId, deps.secretAccessKey, deps.sessionToken, deps.region)
+        if (results.error) {
+          throw new Error(results.error)
         }
+        return []
       },
       listDependencies: ["accessKeyId", "secretAccessKey", "sessionToken", "region"]
     },
+    customModelId: {
+      type: "string",
+      label: "Custom Model ID",
+      description: "",
+      required: true,
+      default: ""
+    }
   }
 }

@@ -4,13 +4,13 @@ import { useSetAtom, useAtom, useAtomValue } from "jotai"
 import { codeStreamingAtom } from "../atoms/codeStreaming"
 import { useTranslation } from "react-i18next"
 import { historiesAtom, loadHistoriesAtom } from "../atoms/historyState"
-import { isConfigActiveAtom, isConfigNotInitializedAtom } from "../atoms/configState"
+import { activeConfigAtom, currentModelSupportToolsAtom, isConfigActiveAtom, isConfigNotInitializedAtom } from "../atoms/configState"
 import Setup from "./Setup"
 import { openOverlayAtom } from "../atoms/layerState"
 import useHotkeyEvent from "../hooks/useHotkeyEvent"
 import Textarea from "../components/WrappedTextarea"
 import Tooltip from "../components/Tooltip"
-import { loadToolsAtom, toolsAtom } from "../atoms/toolState"
+import { enabledToolsAtom, loadToolsAtom } from "../atoms/toolState"
 import { DevModeOnlyComponent } from "../components/DevModeOnlyComponent"
 import { windowTitleAtom } from "../atoms/windowState"
 
@@ -38,9 +38,12 @@ const Welcome = () => {
   const openOverlay = useSetAtom(openOverlayAtom)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const loadTools = useSetAtom(loadToolsAtom)
-  const tools = useAtomValue(toolsAtom)
+  const tools = useAtomValue(enabledToolsAtom)
   const hasActiveConfig = useAtomValue(isConfigActiveAtom)
   const setWindowTitle = useSetAtom(windowTitleAtom)
+  const supportTools = useAtomValue(currentModelSupportToolsAtom)
+  const activeConfig = useAtomValue(activeConfigAtom)
+  const [isDragging, setIsDragging] = useState(false)
 
   useEffect(() => {
     setWindowTitle(t("header.title"));
@@ -138,6 +141,59 @@ const Welcome = () => {
     setUploadedFiles(prev => [...prev, ...validFiles])
   }
 
+  const handleFiles = (files: File[]) => {
+    const existingFiles = uploadedFiles
+
+    const newFiles = files.filter(newFile => {
+      const isDuplicate = existingFiles.some(existingFile => {
+        if (existingFile.name !== newFile.name)
+          return false
+
+        if (existingFile.size !== newFile.size)
+          return false
+
+        if (existingFile.lastModified !== newFile.lastModified)
+          return false
+
+        return true
+      })
+
+      return !isDuplicate
+    })
+
+    if (newFiles.length === 0)
+      return
+
+    setUploadedFiles(prev => [...prev, ...newFiles])
+
+    if (fileInputRef.current) {
+      const dataTransfer = new DataTransfer()
+      uploadedFiles.forEach(file => {
+        dataTransfer.items.add(file)
+      })
+      fileInputRef.current.files = dataTransfer.files
+    }
+  }
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(true)
+  }
+
+  const handleDragLeave = () => {
+    setIsDragging(false)
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(false)
+    if (e.dataTransfer.files) {
+      handleFiles(Array.from(e.dataTransfer.files))
+    }
+  }
+
   if (isConfigNotInitialized) {
     return <Setup />
   }
@@ -148,41 +204,83 @@ const Welcome = () => {
         <h1 className="welcome-title"></h1>
         <p className="welcome-subtitle"></p>
 
-        <form className="welcome-input" onSubmit={handleSubmit}>
-          <div className="input-container">
-            <Textarea
-              ref={textareaRef}
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              onKeyDown={handleKeyDown}
-              onCompositionStart={handleCompositionStart}
-              onCompositionEnd={handleCompositionEnd}
-              onPaste={handlePaste}
-              placeholder={t("chat.placeholder")}
-              autoFocus={true}
-              rows={2}
-            />
-            <div className="input-actions">
-              <input
-                type="file"
-                ref={fileInputRef}
-                multiple
-                accept=".jpg,.jpeg,.png,.webp,.gif,.pdf,.*"
-                style={{ display: "none" }}
-                onChange={handleFileChange}
-              />
-              <button
-                type="button"
-                className="upload-btn"
-                onClick={() => fileInputRef.current?.click()}
-                title={t("chat.uploadFile")}
-              >
-                <svg width="24" height="24" viewBox="0 0 24 24">
-                  <path d="M16.5 6v11.5c0 2.21-1.79 4-4 4s-4-1.79-4-4V5c0-1.38 1.12-2.5 2.5-2.5s2.5 1.12 2.5 2.5v10.5c0 .55-.45 1-1 1s-1-.45-1-1V6H10v9.5c0 1.38 1.12 2.5 2.5 2.5s2.5-1.12 2.5-2.5V5c0-2.21-1.79-4-4-4S7 2.79 7 5v12.5c0 3.04 2.46 5.5 5.5 5.5s5.5-2.46 5.5-5.5V6h-1.5z"/>
+        <div className="welcome-input-wrapper">
+          {activeConfig?.model && activeConfig?.model !== "none" && !supportTools && (
+            <div className="chat-input-banner">
+              {t("chat.unsupportTools", { model: activeConfig?.model })}
+            </div>
+          )}
+          {(!activeConfig?.model || activeConfig?.model == "none") && (
+            <div className="chat-input-banner">
+              {t("chat.noModelBanner")}
+            </div>
+          )}
+          <form
+            className="welcome-input"
+            onSubmit={handleSubmit}
+            onDragOver={handleDragOver}
+            onDrop={handleDrop}
+          >
+            <div
+              className={`drag-overlay ${isDragging ? 'show' : ''}`}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+            >
+              <div
+                className="drag-overlay-bg"
+                onDrop={handleDrop}
+              ></div>
+              <div className="drag-overlay-text">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 22 22" width="22" height="22">
+                  <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 3H3a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2Z"></path>
+                  <path fill="currentColor" d="M6.5 10a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3ZM3 16l4-4 2 2 6-4.5 4 4.5v1.999L3 16Z"></path>
                 </svg>
-              </button>
-              <div className="tools-container">
-                <DevModeOnlyComponent component={
+                {t('chat.dragFiles')}
+              </div>
+            </div>
+            <div className="input-container">
+              <Textarea
+                ref={textareaRef}
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                onKeyDown={handleKeyDown}
+                onCompositionStart={handleCompositionStart}
+                onCompositionEnd={handleCompositionEnd}
+                onPaste={handlePaste}
+                placeholder={t("chat.placeholder")}
+                autoFocus={true}
+                rows={2}
+              />
+              <div className="input-actions">
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  multiple
+                  accept=".jpg,.jpeg,.png,.webp,.gif,.pdf,.*"
+                  style={{ display: "none" }}
+                  onChange={handleFileChange}
+                />
+                <div className="input-actions">
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    multiple
+                    accept=".jpg,.jpeg,.png,.webp,.gif,.pdf,.*"
+                    style={{ display: "none" }}
+                    onChange={handleFileChange}
+                  />
+                  <button
+                    type="button"
+                    className="upload-btn"
+                    onClick={() => fileInputRef.current?.click()}
+                    title={t("chat.uploadFile")}
+                  >
+                    <svg width="24" height="24" viewBox="0 0 24 24">
+                      <path d="M16.5 6v11.5c0 2.21-1.79 4-4 4s-4-1.79-4-4V5c0-1.38 1.12-2.5 2.5-2.5s2.5 1.12 2.5 2.5v10.5c0 .55-.45 1-1 1s-1-.45-1-1V6H10v9.5c0 1.38 1.12 2.5 2.5 2.5s2.5-1.12 2.5-2.5V5c0-2.21-1.79-4-4-4S7 2.79 7 5v12.5c0 3.04 2.46 5.5 5.5 5.5s5.5-2.46 5.5-5.5V6h-1.5z"/>
+                    </svg>
+                  </button>
+                  <div className="tools-container">
+                  <DevModeOnlyComponent component={
                   <button
                     className="tools-btn"
                   onClick={(e) => {
@@ -196,19 +294,21 @@ const Welcome = () => {
                     {`${tools.length} ${t("chat.tools")}`}
                   </button>
                 } />
-                <Tooltip
-                  content={!hasActiveConfig ? t("chat.noModelAlert") : t("chat.send")}
-                >
-                  <button type="submit" className="send-btn" disabled={(!message.trim() && uploadedFiles.length === 0) || !hasActiveConfig}>
-                    <svg width="24" height="24" viewBox="0 0 24 24">
-                      <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
-                    </svg>
-                  </button>
-                </Tooltip>
+                    <Tooltip
+                      content={!hasActiveConfig ? t("chat.noModelAlert") : t("chat.send")}
+                    >
+                      <button type="submit" className="send-btn" disabled={(!message.trim() && uploadedFiles.length === 0) || !hasActiveConfig}>
+                        <svg width="24" height="24" viewBox="0 0 24 24">
+                          <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                        </svg>
+                      </button>
+                    </Tooltip>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        </form>
+          </form>
+        </div>
 
         {uploadedFiles.length > 0 && (
           <div className="uploaded-files-preview">

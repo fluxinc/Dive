@@ -28,6 +28,9 @@ declare global {
         children: any
         name: string
       };
+      "think": {
+        children: any
+      };
     }
   }
 }
@@ -144,7 +147,13 @@ const Message = ({ messageId, text, isSent, files, isError, isLoading, sources, 
           inlineMathDouble: false
         }], remarkGfm]}
         rehypePlugins={[rehypeKatex, rehypeRaw]}
+        remarkRehypeOptions={{
+          allowDangerousHtml: true
+        }}
         components={{
+          "think"({ children }) {
+            return <div className="think">{children}</div>
+          },
           "tool-call"({children, name}) {
             let content = children
             if (typeof children !== "string") {
@@ -251,7 +260,7 @@ const Message = ({ messageId, text, isSent, files, isError, isLoading, sources, 
           },
         }}
       >
-        {_text.replaceAll("file://", "https://localfile")}
+        {_text.replaceAll("file://", "https://localfile").replaceAll("</think>\n\n", "\n\n</think>\n\n")}
       </ReactMarkdown>
     )
   }, [content, text, isSent, isLoading])
@@ -282,7 +291,7 @@ const Message = ({ messageId, text, isSent, files, isError, isLoading, sources, 
     <div className="message-container">
       <div className={`message ${isSent ? "sent" : "received"} ${isError ? "error" : ""}`}>
         {formattedText}
-        {files && files.length > 0 && <FilePreview files={files} />}
+        {files && files.length > 0 && <FilePreview files={typeof files === "string" ? JSON.parse(files) : files} />}
         {isLoading && (
           <div className="loading-dots">
             <span></span>

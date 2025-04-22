@@ -9,6 +9,8 @@ import { themeAtom, systemThemeAtom } from "../atoms/themeState"
 import Overlay from "./Overlay"
 import KeymapModal from "../components/Modal/KeymapModal"
 import { devModeAtom } from "../atoms/devModeState"
+import CodeModal from "./Chat/CodeModal"
+
 const Layout = () => {
   const isConfigNotInitialized = useAtomValue(isConfigNotInitializedAtom)
   const [theme] = useAtom(themeAtom)
@@ -16,13 +18,14 @@ const Layout = () => {
   const isDevMode = useAtomValue(devModeAtom)
   return (
     <div className="app-container" data-theme={theme === "system" ? systemTheme : theme}>
-      {!isConfigNotInitialized &&
-        <>
-          <Header showHelpButton showModelSelect={isDevMode} />
-          <HistorySidebar />
-        </>
-      }
-      <Outlet />
+      <div className="app-content">
+        {!isConfigNotInitialized && <HistorySidebar />}
+        <div className="outlet-container">
+          {!isConfigNotInitialized && <Header showHelpButton showModelSelect={isDevMode} />}
+          <Outlet />
+        </div>
+        <CodeModal />
+      </div>
       <Overlay />
       <GlobalToast />
       <KeymapModal />
