@@ -1,0 +1,40 @@
+FROM node:20-alpine
+
+# Find out which user we're running as (node or root)
+RUN echo "Home directory is $HOME"
+
+WORKDIR /app
+
+# Install build dependencies
+RUN apk add --no-cache python3 make g++ git curl
+
+# Copy just package.json and package-lock.json to leverage layer caching
+COPY package.json package-lock.json ./
+
+# Create a custom dev script that skips the problematic apply-config.js
+RUN sed -i 's/"postinstall": ".*"/"postinstall": "echo Skipping postinstall in Docker"/' package.json && \
+    sed -i 's/"dev": "node scripts\/apply-config.js && vite --config vite.config.ts"/"dev": "vite --config vite.config.ts"/' package.json
+
+# Install dependencies with the modified package.json
+RUN npm install
+
+# Copy the application code except node_modules
+COPY . .
+
+# Create necessary directories for the locales and translations
+RUN mkdir -p /app/public/locales/en /app/config /app/src
+
+# Create a stub translation file to avoid errors
+RUN echo '{}' > /app/public/locales/en/translation.json
+
+# Create files in home directories
+# For root user (default in many containers)
+RUN mkdir -p /root && echo "This is a file in root's home" > /root/myfile.txt
+# For node user (in case your container runs as node)
+RUN mkdir -p /home/node && echo "This is a file in node's home" > /home/node/myfile.txt && chown -R node:node /home/node
+
+# Expose the port the app runs on
+EXPOSE 7777
+
+# Run the dev server directly using the shell
+CMD sh -c "echo 'Starting Dive app...' && npm run dev -- --host 0.0.0.0" 

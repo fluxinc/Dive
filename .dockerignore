@@ -1,13 +1,38 @@
-node_modules
-.github
-.vscode
+# Git
+.git
 .gitignore
+.github
+.gitmodules
+
+# Docker
+docker-compose.yml
+Dockerfile*
 .dockerignore
-.env
-.env.example
-.env.local
-.env.production
-.env.test
-release
+
+# Node.js
+node_modules
+npm-debug.log
 dist
 dist-electron
+build
+
+# IDE
+.vscode
+.idea
+*.sublime-*
+
+# Testing
+coverage
+.nyc_output
+
+# Documentation
+docs
+*.md
+LICENSE
+
+# OS specific
+.DS_Store
+Thumbs.db
+
+mcp-server
+mcp-host
