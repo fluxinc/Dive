@@ -2,7 +2,3 @@
 	path = mcp-host
 	url = git@github.com:OpenAgentPlatform/dive-mcp-host.git
 	branch = main
-[submodule "mcp-server"]
-	path = mcp-server
-	url = git@github.com:fluxinc/RAG-mcp-server.git
-	branch = master
