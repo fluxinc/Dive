@@ -149,12 +149,43 @@ export const platform = {
     } else {
       const storageKey = `${STORAGE_KEYS.MODEL_LIST_OPENAI_COMPATIBLE}_${apiKey.substring(0, 8)}_${baseURL || "default"}`
       const cachedList = getStorageItem(storageKey, null)
+      
       if (cachedList) {
         return cachedList
       }
-      const result = { results: ["gpt-3.5-turbo", "gpt-4"], error: null }
-      setStorageItem(storageKey, result)
-      return result
+      
+      try {
+        // Fetch models from the compatible API
+        const url = `${baseURL || "https://api.openai.com"}/v1/models`
+        const response = await fetch(url, {
+          method: "GET",
+          headers: {
+            "Authorization": `Bearer ${apiKey}`,
+            "Content-Type": "application/json"
+          }
+        })
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch models: ${response.statusText}`)
+        }
+        
+        const data = await response.json()
+        const modelNames = data.data.map((model: any) => model.id)
+        
+        // Only include chat models (typically what we want)
+        const chatModels = modelNames.filter((name: string) => 
+          name.includes("gpt") || name.includes("chat") || name.includes("instruct")
+        )
+        
+        const result = { results: chatModels, error: null }
+        setStorageItem(storageKey, result)
+        return result
+      } catch (error) {
+        console.error("Error fetching OpenAI compatible models:", error)
+        // Fallback to default models
+        const result = { results: ["gpt-3.5-turbo", "gpt-4"], error: String(error) }
+        return result
+      }
     }
   },
   
