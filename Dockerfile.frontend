@@ -1,8 +1,5 @@
 FROM node:20-alpine
 
-# Find out which user we're running as (node or root)
-RUN echo "Home directory is $HOME"
-
 WORKDIR /app
 
 # Install build dependencies
@@ -13,13 +10,10 @@ COPY package.json package-lock.json ./
 
 # Create a custom dev script that skips the problematic apply-config.js
 RUN sed -i 's/"postinstall": ".*"/"postinstall": "echo Skipping postinstall in Docker"/' package.json && \
-    sed -i 's/"dev": "node scripts\/apply-config.js && vite --config vite.config.ts"/"dev": "vite --config vite.config.ts"/' package.json
+    sed -i 's/"dev": "node scripts\/apply-config.js && vite --config vite.config.ts"/"dev": "vite --config vite.config.ts --force"/' package.json
 
 # Install dependencies with the modified package.json
 RUN npm install
-
-# Copy the application code except node_modules
-COPY . .
 
 # Create necessary directories for the locales and translations
 RUN mkdir -p /app/public/locales/en /app/config /app/src
@@ -36,5 +30,13 @@ RUN mkdir -p /home/node && echo "This is a file in node's home" > /home/node/myf
 # Expose the port the app runs on
 EXPOSE 7777
 
+# Copy the application code as the LAST step
+# This ensures the most recent code is always used
+COPY . .
+
+# Add .dockerignore note
+# NOTE: Add a .dockerignore file with node_modules if you don't have one already
+
 # Run the dev server directly using the shell
-CMD sh -c "echo 'Starting Dive app...' && npm run dev -- --host 0.0.0.0" 
+RUN npm run build
+CMD sh -c "echo 'Starting Dive app with latest code...' && npm run preview -- --host 0.0.0.0 --port 7777" 
