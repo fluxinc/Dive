@@ -1,7 +1,8 @@
 [submodule "mcp-host"]
 	path = mcp-host
-	url = https://github.com/OpenAgentPlatform/dive-mcp-host.git
+	url = git@github.com:OpenAgentPlatform/dive-mcp-host.git
 	branch = main
 [submodule "mcp-server"]
 	path = mcp-server
-	url = ../rag-mcp-server
+	url = git@github.com:fluxinc/RAG-mcp-server.git
+	branch = master
