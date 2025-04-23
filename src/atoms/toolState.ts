@@ -18,7 +18,7 @@ export interface Tool {
 export const toolsAtom = atom<Tool[]>([])
 
 export const enabledToolsAtom = atom<Tool[]>(
-  (get, set) => {
+  (get) => {
     const tools = get(toolsAtom)
     return tools.filter((tool) => tool.enabled)
   }
@@ -27,12 +27,17 @@ export const enabledToolsAtom = atom<Tool[]>(
 export const loadToolsAtom = atom(
   null,
   async (get, set) => {
-    const response = await fetch("/api/tools")
-    const data = await response.json()
-    if (data.success) {
-      set(toolsAtom, data.tools)
+    try {
+      const response = await fetch("/api/tools")
+      const data = await response.json()
+      if (data.success) {
+        set(toolsAtom, data.tools)
+      }
+      return data
+    } catch (error) {
+      console.error("Error loading tools:", error)
+      set(toolsAtom, [])
+      return { success: false, message: error instanceof Error ? error.message : "Failed to load tools" }
     }
-
-    return data
   }
 )

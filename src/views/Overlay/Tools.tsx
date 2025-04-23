@@ -14,6 +14,7 @@ import { loadToolsAtom, Tool, toolsAtom } from "../../atoms/toolState"
 import Tooltip from "../../components/Tooltip"
 import PopupConfirm from "../../components/PopupConfirm"
 import Dropdown from "../../components/DropDown"
+import { platform } from "../../platform"
 
 interface ToolsCache {
   [key: string]: {
@@ -197,7 +198,7 @@ const Tools = () => {
 
   const handleConfigSubmit = async (newConfig: Record<string, any>) => {
     try {
-      const filledConfig = await window.ipcRenderer.fillPathToConfig(JSON.stringify(newConfig))
+      const filledConfig = await platform.fillPathToConfig(JSON.stringify(newConfig))
       const data = await updateMCPConfig(filledConfig)
       if (data.errors && Array.isArray(data.errors) && data.errors.length) {
         data.errors

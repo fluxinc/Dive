@@ -1,3 +1,4 @@
+import { platform } from "../platform"
 export const EMPTY_PROVIDER = "none"
 
 export type BaseProvider = "openai" | "ollama" | "anthropic" | "mistralai" | "bedrock"
@@ -94,7 +95,7 @@ export const defaultInterface: Record<InterfaceProvider, InterfaceDefinition> = 
       default: "",
       placeholder: "Select a model",
       listCallback: async (deps) => {
-        const results = await window.ipcRenderer.openaiModelList(deps.apiKey)
+        const results = await platform.openaiModelList(deps.apiKey)
         if (results.error) {
           throw new Error(results.error)
         }
@@ -130,7 +131,7 @@ export const defaultInterface: Record<InterfaceProvider, InterfaceDefinition> = 
       default: "",
       placeholder: "Default model",
       listCallback: async (deps) => {
-        const results = await window.ipcRenderer.openaiCompatibleModelList(deps.apiKey, deps.baseURL)
+        const results = await platform.openaiCompatibleModelList(deps.apiKey, deps.baseURL)
         if (results.error) {
           throw new Error(results.error)
         }
@@ -157,7 +158,7 @@ export const defaultInterface: Record<InterfaceProvider, InterfaceDefinition> = 
       default: "",
       placeholder: "Select a model",
       listCallback: async (deps) => {
-        const results = await window.ipcRenderer.ollamaModelList(deps.baseURL)
+        const results = await platform.ollamaModelList(deps.baseURL)
         if (results.error) {
           throw new Error(results.error)
         }
@@ -193,7 +194,7 @@ export const defaultInterface: Record<InterfaceProvider, InterfaceDefinition> = 
       default: "",
       placeholder: "Select a model",
       listCallback: async (deps) => {
-        const results = await window.ipcRenderer.anthropicModelList(deps.apiKey, deps.baseURL)
+        const results = await platform.anthropicModelList(deps.apiKey, deps.baseURL)
         if (results.error) {
           throw new Error(results.error)
         }
@@ -220,7 +221,7 @@ export const defaultInterface: Record<InterfaceProvider, InterfaceDefinition> = 
       default: "",
       placeholder: "Select a model",
       listCallback: async (deps) => {
-        const results = await window.ipcRenderer.googleGenaiModelList(deps.apiKey)
+        const results = await platform.googleGenaiModelList(deps.apiKey)
         if (results.error) {
           throw new Error(results.error)
         }
@@ -247,7 +248,7 @@ export const defaultInterface: Record<InterfaceProvider, InterfaceDefinition> = 
       default: "",
       placeholder: "Select a model",
       listCallback: async (deps) => {
-        const results = await window.ipcRenderer.mistralaiModelList(deps.apiKey)
+        const results = await platform.mistralaiModelList(deps.apiKey)
         if (results.error) {
           throw new Error(results.error)
         }
@@ -301,7 +302,7 @@ export const defaultInterface: Record<InterfaceProvider, InterfaceDefinition> = 
       default: "",
       placeholder: "Select a model",
       listCallback: async (deps) => {
-        const results = await window.ipcRenderer.bedrockModelList(deps.accessKeyId, deps.secretAccessKey, deps.sessionToken, deps.region)
+        const results = await platform.bedrockModelList(deps.accessKeyId, deps.secretAccessKey, deps.sessionToken, deps.region)
         if (results.error) {
           throw new Error(results.error)
         }
