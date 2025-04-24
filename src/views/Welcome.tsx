@@ -201,7 +201,7 @@ const Welcome = () => {
   return (
     <div className="main-container">
       <div className="welcome-content">
-        <h1 className="welcome-title"></h1>
+        <h1 className="welcome-title"><span className="beta-overlay"> [BETA]</span></h1>
         <p className="welcome-subtitle"></p>
 
         <div className="welcome-input-wrapper">
