@@ -155,6 +155,7 @@ const ChatWindow = () => {
           }, [])
 
         setMessages(convertedMessages)
+        fetchSources(id)
       }
     } catch (error) {
       console.warn("Failed to load chat:", error)
