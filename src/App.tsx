@@ -1,11 +1,11 @@
 import { RouterProvider } from "react-router-dom"
 import { router } from "./router"
-import { useSetAtom } from "jotai"
+import { useSetAtom, useAtomValue } from "jotai"
 import { loadConfigAtom } from "./atoms/configState"
 import { useEffect, useState } from "react"
 import { handleGlobalHotkey, loadHotkeyMapAtom } from "./atoms/hotkeyState"
 import { handleWindowResizeAtom } from "./atoms/sidebarState"
-import { systemThemeAtom } from "./atoms/themeState"
+import { systemThemeAtom, themeAtom } from "./atoms/themeState"
 import Updater from "./updater"
 import WindowTitle from "./components/WindowTitle"
 
@@ -36,24 +36,24 @@ const BetaOverlay = () => {
 
 // Corner logo component
 const CornerLogo = () => {
+  const currentTheme = useAtomValue(themeAtom)
+  const systemTheme = useAtomValue(systemThemeAtom)
+  
+  // Determine if we're in light mode (and thus need inversion)
+  const isLightMode = currentTheme === "light" || (currentTheme === "system" && systemTheme === "light")
   
   return (
     <div
-      style={{
-        position: 'fixed',
-        bottom: '20px',
-        right: '20px',
-        zIndex: 9999,
-        cursor: 'pointer',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        transform: 'translateZ(0)',
-        isolation: 'isolate',
-      }}
+      className="corner-logo"
     >
       <a href="https://bit.ly/4jRx5uv" target="_blank" rel="noopener noreferrer">
-        <img src="./flux-logo-white.png" alt="Fluxinc logo" width="120" height="40" />
+        <img 
+          src="./flux-logo-white.png" 
+          alt="Fluxinc logo" 
+          width="120" 
+          height="40" 
+          style={{ filter: isLightMode ? 'invert(1)' : 'none' }}
+        />
       </a>
     </div>
   )
