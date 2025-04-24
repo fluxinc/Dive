@@ -503,14 +503,22 @@ const ChatWindow = () => {
       
       // Create a completely new messages array to ensure React detects the change
       setMessages(prev => {
-        // Make a deep copy of the previous messages
-        const newMessages = prev.map(msg => ({...msg}));
+        // Create new message objects without sources
+        const newMessages: Message[] = prev.map(msg => {
+          return {
+            id: msg.id,
+            text: msg.text,
+            isSent: msg.isSent,
+            timestamp: msg.timestamp,
+            files: msg.files,
+            isError: msg.isError
+          };
+        });
+        
         if (newMessages.length > 0) {
-          const lastMsg = newMessages[newMessages.length - 1];
-          
-          // Create a new message object with sources
+          // Add sources only to the last message
           newMessages[newMessages.length - 1] = {
-            ...lastMsg,
+            ...newMessages[newMessages.length - 1],
             sources: sourcesList
           };
         }
