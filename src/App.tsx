@@ -12,6 +12,30 @@ import WindowTitle from "./components/WindowTitle"
 // Check if we're running in Electron
 const isElectron = typeof window !== "undefined" && typeof window.ipcRenderer !== "undefined"
 
+// Beta overlay component
+const BetaOverlay = () => {
+  return (
+    <div style={{
+      position: 'fixed',
+      top: '20px',
+      right: '20px',
+      color: 'rgba(255, 255, 255, 0.5)',
+      backgroundColor: 'rgba(0, 0, 0, 0.2)',
+      padding: '4px 8px',
+      borderRadius: '4px',
+      fontSize: '28px',
+      fontWeight: 'bold',
+      pointerEvents: 'none',
+      zIndex: 9999,
+      transform: 'translateZ(0)',
+      userSelect: 'none',
+      isolation: 'isolate',
+    }}>
+      BETA
+    </div>
+  )
+}
+
 function App() {
   const [loading, setLoading] = useState(true)
   const loadConfig = useSetAtom(loadConfigAtom)
@@ -56,6 +80,7 @@ function App() {
       <WindowTitle />
       <RouterProvider router={router} />
       {isElectron && <Updater />}
+      <BetaOverlay />
     </>
   )
 }
