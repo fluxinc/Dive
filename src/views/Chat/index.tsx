@@ -402,53 +402,14 @@ const ChatWindow = () => {
 
               case "tool_result":
                 const result = data.content as ToolResult
-                
-                // Variable to store sources for the current message
-                let messageSourceList: Source[] | undefined = undefined
 
-                // Check for source URLs in the tool result
-                const sourcesResult = result.result.content.find((item: any) => item.type == "text" && item.text?.startsWith("<SOURCES>"))
-                if (result.name === 'query' && sourcesResult) {
-                  // Source URLs are in the form of <SOURCES><FILENAME>filename1</FILENAME>url1\n<FILENAME>filename2</FILENAME>url2\n<FILENAME>filename3</FILENAME>url3</SOURCES>
-                  const sourcesList = sourcesResult.text.replace("<SOURCES>", "").replace("</SOURCES>", "").trim().split("\n")
-                  const sourceUrlsList: Source[] = sourcesList.map((item: string) => {
-                    if (item.includes("</FILENAME>")) {
-                      const splitSource = item.split("</FILENAME>")
-                      const filename = splitSource[0].slice("<FILENAME>".length)
-                      const url = splitSource[1]
-                      return {
-                        filename,
-                        url
-                      }
-                    } else {
-                      // Handle sources that are just URLs without filenames
-                      return {
-                        filename: "",
-                        url: item
-                      }
-                    }
-                  })
-                  
-                  // Store sources for use outside this block
-                  messageSourceList = sourceUrlsList
-                  
-                  const resultWithoutSources = result.result.content.filter((item: any) => !item.text?.startsWith("<SOURCES>"))
-                  
-                  toolCallResults.current = toolCallResults.current.replace(`</tool-call>\n`, "")
-                  toolCallResults.current += `##Tool Result:${safeBase64Encode(JSON.stringify(resultWithoutSources))}</tool-call>\n`
-                } else {
-                  toolCallResults.current = toolCallResults.current.replace(`</tool-call>\n`, "")
-                  toolCallResults.current += `##Tool Result:${safeBase64Encode(JSON.stringify(result.result))}</tool-call>\n`
-                }
+                toolCallResults.current = toolCallResults.current.replace(`</tool-call>\n`, "")
+                toolCallResults.current += `##Tool Result:${safeBase64Encode(JSON.stringify(result.result))}</tool-call>\n`
 
                 setMessages(prev => {
                   const newMessages = [...prev]
-                  // Add the current message text along with tool results and source data
+                  // Add the current message text along with tool results
                   newMessages[newMessages.length - 1].text = currentText + toolCallResults.current.replace("%name%", result.name)
-                  // Store the sources in the message object if available
-                  if (messageSourceList) {
-                    newMessages[newMessages.length - 1].sources = messageSourceList
-                  }
                   return newMessages
                 })
 
@@ -500,6 +461,12 @@ const ChatWindow = () => {
           }
         }
       }
+      // After each post request, update sources
+      try {
+        await fetchSources(currentChatId.current);
+      } catch (error) {
+        console.warn("Error fetching sources:", error)
+      }
     } catch (error: any) {
       setMessages(prev => {
         const newMessages = [...prev]
@@ -517,6 +484,39 @@ const ChatWindow = () => {
       scrollToBottom()
     }
   }, [])
+
+  // Extract source fetching to a separate function
+  const fetchSources = useCallback(async (chatId: string | null) => {
+    if (!chatId) return;
+    
+    const sourceResponse = await fetch(`/api/chat/${chatId}/sources`, {
+      method: "GET",
+    });
+    const sourceData = await sourceResponse.json();
+
+    if (sourceData.success && sourceData.sources) {
+      const sourcesList: Source[] = sourceData.sources.map((source: { filename: string, url: string }) => ({
+        filename: source.filename,
+        url: source.url
+      }));
+      
+      // Create a completely new messages array to ensure React detects the change
+      setMessages(prev => {
+        // Make a deep copy of the previous messages
+        const newMessages = prev.map(msg => ({...msg}));
+        if (newMessages.length > 0) {
+          const lastMsg = newMessages[newMessages.length - 1];
+          
+          // Create a new message object with sources
+          newMessages[newMessages.length - 1] = {
+            ...lastMsg,
+            sources: sourcesList
+          };
+        }
+        return newMessages;
+      });
+    }
+  }, []);
 
   const handleInitialMessage = useCallback(async (message: string, files?: File[]) => {
     if (files && files.length > 0) {

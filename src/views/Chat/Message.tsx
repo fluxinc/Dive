@@ -1,6 +1,6 @@
 import "katex/dist/katex.min.css"
 
-import React, { useMemo, useRef, useState } from "react"
+import React, { useMemo, useRef, useState, useEffect } from "react"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 import remarkMath from "remark-math"
@@ -275,7 +275,7 @@ const Message = ({ messageId, text, isSent, files, isError, isLoading, sources, 
     }
     
     return null;
-  }, [isSent, sources]);
+  }, [isSent, sources, messageId]);
 
   if (isEditing) {
     return (
@@ -292,6 +292,11 @@ const Message = ({ messageId, text, isSent, files, isError, isLoading, sources, 
       <div className={`message ${isSent ? "sent" : "received"} ${isError ? "error" : ""}`}>
         {formattedText}
         {files && files.length > 0 && <FilePreview files={typeof files === "string" ? JSON.parse(files) : files} />}
+        {!isSent && sources && sources.length > 0 && (
+          <div className="message-sources">
+            {sourcePanel}
+          </div>
+        )}
         {isLoading && (
           <div className="loading-dots">
             <span></span>
@@ -301,32 +306,31 @@ const Message = ({ messageId, text, isSent, files, isError, isLoading, sources, 
         )}
         {!isLoading && !isChatStreaming && (
           <>
-            {sourcePanel}
             <div className="message-tools">
               <button
                 type="button"
                 className="tools-btn"
                 onClick={() => onCopy(messageId, isSent ? content : text)}
                 title={t("chat.copy")}
-            >
-              {isCopied[messageId] ? (
-                <>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18px" height="18px" viewBox="0 0 22 22" fill="transparent">
-                    <path d="M4.6709 10.4241L9.04395 15.1721L17.522 7.49414" stroke="currentColor" fill="transparent" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                  <span>{t('chat.copied')}</span>
-                </>
-              ) : (
-                <>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18px" height="18px" viewBox="0 0 22 22" fill="transparent">
-                    <path d="M13 20H2V6H10.2498L13 8.80032V20Z" fill="transparent" stroke="currentColor" strokeWidth="2" strokeMiterlimit="10" strokeLinejoin="round"/>
-                    <path d="M13 9H10V6L13 9Z" fill="currentColor" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M9 3.5V2H17.2498L20 4.80032V16H16" fill="transparent" stroke="currentColor" strokeWidth="2" strokeMiterlimit="10" strokeLinejoin="round"/>
-                    <path d="M20 5H17V2L20 5Z" fill="currentColor" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                  <span>{t('chat.copy')}</span>
-                </>
-              )}
+              >
+                {isCopied[messageId] ? (
+                  <>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18px" height="18px" viewBox="0 0 22 22" fill="transparent">
+                      <path d="M4.6709 10.4241L9.04395 15.1721L17.522 7.49414" stroke="currentColor" fill="transparent" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    <span>{t('chat.copied')}</span>
+                  </>
+                ) : (
+                  <>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18px" height="18px" viewBox="0 0 22 22" fill="transparent">
+                      <path d="M13 20H2V6H10.2498L13 8.80032V20Z" fill="transparent" stroke="currentColor" strokeWidth="2" strokeMiterlimit="10" strokeLinejoin="round"/>
+                      <path d="M13 9H10V6L13 9Z" fill="currentColor" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M9 3.5V2H17.2498L20 4.80032V16H16" fill="transparent" stroke="currentColor" strokeWidth="2" strokeMiterlimit="10" strokeLinejoin="round"/>
+                      <path d="M20 5H17V2L20 5Z" fill="currentColor" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    <span>{t('chat.copy')}</span>
+                  </>
+                )}
               </button>
               {isSent ?
                 <>

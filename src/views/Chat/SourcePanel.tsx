@@ -22,7 +22,7 @@ const SourcePanel: React.FC<SourcePanelProps> = ({ content }) => {
       try {
         const jsonData = JSON.parse(decoded)
         return jsonData
-      } catch {
+      } catch (err) {
         // If JSON parsing fails, try string format with <FILENAME> tags
         const sources: SourceItem[] = []
         
@@ -61,7 +61,9 @@ const SourcePanel: React.FC<SourcePanelProps> = ({ content }) => {
   }, [content])
   
   const sources = useMemo(() => {
-    if (!sourceItems || !sourceItems.length) return []
+    if (!sourceItems || !sourceItems.length) {
+      return []
+    }
     
     const _sources = sourceItems.map((item: string | SourceItem) => {
       if (typeof item === 'string') {
@@ -99,6 +101,7 @@ const SourcePanel: React.FC<SourcePanelProps> = ({ content }) => {
     return filename.replaceAll('.txt', '').replaceAll('.pdf', '').replaceAll('-', ' ').replaceAll('_', ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
   }
 
+  // Add additional check for empty sources
   if (!content || !sources || sources.length === 0) {
     return null
   }

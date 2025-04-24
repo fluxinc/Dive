@@ -80,6 +80,7 @@ const ChatMessages = ({ messages, isLoading, onRetry, onEdit }: Props) => {
             messageId={message.id}
             onRetry={() => onRetry(message.id)}
             onEdit={(newText: string) => onEdit(message.id, newText)}
+            sources={message.sources}
           />
         ))}
         <div ref={messagesEndRef} />

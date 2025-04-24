@@ -23,6 +23,7 @@ export default defineConfig(({ command: _ }) => {
     server: {
       host: "0.0.0.0", // Listen on all network interfaces for Docker
       port: 7777,
+      allowedHosts: ["densebreast.fluxinc.co", "localhost"],
       proxy: {
         // Proxy all API requests to the MCP server
         "/api": {
@@ -42,6 +43,9 @@ export default defineConfig(({ command: _ }) => {
         ignored: ["**/mcp-host/**"],
         exclude: ["**/mcp-host/**"],
       },
+    },
+    preview: {
+      allowedHosts: ["densebreast.fluxinc.co", "localhost"]
     }
   }
 })
