@@ -1,9 +1,9 @@
 {
   "header": {
-    "title": "DenseBreastInfo.org Assistant"
+    "title": "DenseBreast-Info.org Tutor"
   },
   "chat": {
-    "placeholder": "Send any message...",
+    "placeholder": "Ask any question about dense breasts...",
     "newChat": "New Chat",
     "newChatTooltip": "Start a new conversation",
     "history": "History",
