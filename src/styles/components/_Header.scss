@@ -98,7 +98,29 @@
 }
 
 .app-title {
+  position: absolute;
+  left: calc(80px + $page-h-padding);
+  max-width: calc(100% - 80px - $page-h-padding * 2);
+  transition: left $transition-normal ease, width $transition-normal ease, max-width $transition-normal ease;
+
+  
   &::before {
     content: var(--app-title);
+  }
+}
+
+.sidebar-visible {
+  .app-title {
+    left: $sidebar-width + 5px;
+    max-width: calc(100% - $sidebar-width - 5px - $page-h-padding * 2);
+    
+    @media (max-width: $breakpoint-m) {
+      left: calc(80px + $page-h-padding);
+      max-width: calc(100% - 80px - $page-h-padding * 2);
+    }
+
+    @media (max-width: $breakpoint-s) {
+      max-width: calc(100% - 80px - $page-h-padding * 2);
+    }
   }
 }

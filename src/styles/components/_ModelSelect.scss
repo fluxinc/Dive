@@ -4,7 +4,7 @@ $select-button-width: 475px;
 
 .sidebar-visible {
   .model-select {
-    left: $sidebar-width + 5px;
+    left: $sidebar-width + 5px + 300px;
     //menu left side: 125px
     //menu right side: 36px
     //gap: 16px
@@ -13,7 +13,7 @@ $select-button-width: 475px;
     max-width: calc(100% - $sidebar-width + 11px - 36px - 16px * 2 - $page-h-padding);
 
     @media (max-width: $breakpoint-m) {
-      left: calc(125px + 16px + $page-h-padding);
+      left: calc(125px + 16px + 300px + $page-h-padding);
       max-width: calc(100% - 125px - 36px - 16px * 2 - $page-h-padding * 2);
       // width: calc(100% - 125px - 36px - 16px * 2 - $page-h-padding * 2);
     }
@@ -32,7 +32,7 @@ $select-button-width: 475px;
   max-width: calc(100% - 125px - 36px - 16px * 2 - $page-h-padding * 2);
   height: 40px;
   position: absolute;
-  left: calc(125px + 16px + $page-h-padding);
+  left: calc(125px + 16px + 300px + $page-h-padding);
   transition: left $transition-normal ease, width $transition-normal ease, max-width $transition-normal ease;
 
   .select-button {

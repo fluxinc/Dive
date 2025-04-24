@@ -162,7 +162,7 @@ const HistorySidebar = ({ onNewChat }: Props) => {
   return (
     <>
       <div className={`history-sidebar ${isVisible ? "visible" : ""}`} tabIndex={0} onBlur={onBlur} ref={containerRef}>
-        <Header />
+        {/* <Header /> */}
         <div className="history-header">
           <Tooltip
             content={`${t("chat.newChatTooltip")} Ctrl + Shift + O`}

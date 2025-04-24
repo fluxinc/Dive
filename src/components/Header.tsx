@@ -31,9 +31,9 @@ const Header = ({ showHelpButton = false, showModelSelect = false }: Props) => {
                 <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
               </svg>
             </button>
-            <h1 className="app-title"></h1>
             {showModelSelect && <ModelSelect />}
           </div>
+          <h1 className="app-title"></h1>
         </div>
         {showHelpButton && (
           <div className="right-side">
