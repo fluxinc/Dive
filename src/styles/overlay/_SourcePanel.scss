@@ -7,6 +7,12 @@
   border: 1px solid var(--border-weak);
   background: var(--bg-op-dark-extremeweak);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+  
+  @media (max-width: $breakpoint-s) {
+    margin: 8px 0;
+    width: 100%;
+  }
 
   summary {
     cursor: pointer;
@@ -17,6 +23,11 @@
     display: flex;
     align-items: center;
     transition: background 0.2s ease;
+    
+    @media (max-width: $breakpoint-s) {
+      padding: 10px 12px;
+      font-size: 14px;
+    }
     
     &:hover {
       background: var(--bg-op-dark-ultraweak);
@@ -34,8 +45,10 @@
     }
   }
   
-  &[open] summary::after {
-    transform: rotate(180deg);
+  &[open] {
+    summary::after {
+      transform: rotate(180deg);
+    }
   }
 
   .source-content {
@@ -43,16 +56,39 @@
     border-top: 1px solid var(--border-weak);
     max-height: 300px;
     overflow: auto;
+    animation: expandSources 0.3s ease-out;
+    
+    @media (max-width: $breakpoint-m) {
+      max-height: 350px;
+    }
+    
+    @media (max-width: $breakpoint-s) {
+      max-height: none; /* Remove the height constraint on mobile */
+      padding: 12px;
+      overflow-y: visible;
+    }
 
     .source-list {
       margin: 0;
       padding: 0;
       list-style: none;
+      width: 100%;
+      
+      @media (max-width: $breakpoint-s) {
+        margin-bottom: 4px;
+      }
       
       li {
         margin-bottom: 12px;
-        padding-left: 12px;
+        padding-left: 14px;
         position: relative;
+        display: flex;
+        width: 100%;
+        
+        @media (max-width: $breakpoint-s) {
+          margin-bottom: 16px;
+          padding-left: 14px;
+        }
         
         &:last-child {
           margin-bottom: 0;
@@ -62,8 +98,13 @@
           content: "•";
           position: absolute;
           left: 0;
+          top: 2px;
           color: var(--text-link);
           font-weight: bold;
+          
+          @media (max-width: $breakpoint-s) {
+            top: 4px;
+          }
         }
         
         &.loading {
@@ -86,15 +127,23 @@
         
         a {
           color: var(--text-link);
-          word-break: break-all;
+          word-break: break-word;
           text-decoration: none;
           padding: 2px 0;
           display: inline-block;
           border-bottom: 1px solid transparent;
           transition: all 0.2s ease;
-          max-width: 100%;
-          overflow: hidden;
-          text-overflow: ellipsis;
+          width: 100%;
+          overflow-wrap: break-word;
+          white-space: normal;
+          
+          @media (max-width: $breakpoint-s) {
+            font-size: 14px;
+            line-height: 1.5;
+            padding: 4px 0;
+            display: inline-block;
+            hyphens: auto;
+          }
           
           &:hover {
             color: var(--text-link-hover);
@@ -103,6 +152,17 @@
         }
       }
     }
+  }
+}
+
+@keyframes expandSources {
+  from {
+    opacity: 0;
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    max-height: 400px;
   }
 }
 

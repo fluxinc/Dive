@@ -8,8 +8,21 @@
   overflow: hidden;
   gap: 20px;
   padding: 0 $page-h-padding;
-  height: 100vh;
+  min-height: 100vh;
+  max-height: 100vh;
   padding-top: $header-height;
+  
+  @media (max-width: $breakpoint-m) {
+    padding: 0 10px;
+    padding-top: $header-height;
+    gap: 10px;
+  }
+  
+  @media (max-width: $breakpoint-s) {
+    padding: 0 5px;
+    padding-top: $header-height;
+    gap: 5px;
+  }
 }
 
 .chat-container {
@@ -21,7 +34,13 @@
   overflow: hidden;
   transition: all 0.3s ease;
   height: calc(100vh - $header-height);
+  max-height: calc(100vh - $header-height);
   color: var(--text);
+  width: 100%;
+  
+  @media (max-width: $breakpoint-m) {
+    height: calc(100vh - $header-height);
+  }
 }
 
 .chat-window {
@@ -77,6 +96,12 @@
   padding: 15px 15px 0;
   margin-bottom: 0;
   padding-bottom: 85px;
+  width: 100%;
+
+  @media (max-width: $breakpoint-s) {
+    padding: 10px 8px 0;
+    padding-bottom: 60px;
+  }
 
   &::-webkit-scrollbar {
     width: 6px;
@@ -92,6 +117,11 @@
     max-height: 200px;
     border-radius: 8px;
     object-fit: contain;
+    
+    @media (max-width: $breakpoint-s) {
+      max-width: 100%;
+      max-height: 150px;
+    }
   }
 }
 
@@ -103,11 +133,21 @@
   position: relative;
   max-width: $chat-width;
   margin: 0 auto;
+  width: 100%;
 
   &:hover {
     .message-tools {
       opacity: 1;
     }
+  }
+  
+  @media (max-width: $breakpoint-m) {
+    max-width: 95%;
+  }
+  
+  @media (max-width: $breakpoint-s) {
+    max-width: 98%;
+    padding: 8px 0;
   }
 }
 
@@ -119,6 +159,14 @@
   max-width: $chat-width;
   width: 100%;
   margin: 0 auto;
+  
+  @media (max-width: $breakpoint-m) {
+    max-width: 95%;
+  }
+  
+  @media (max-width: $breakpoint-s) {
+    max-width: 98%;
+  }
 
   .chat-input-banner {
     display: flex;
@@ -150,6 +198,17 @@
   max-width: $chat-width;
   margin: 0 auto;
   width: 100%;
+  
+  @media (max-width: $breakpoint-m) {
+    max-width: 100%;
+    padding: 10px;
+  }
+  
+  @media (max-width: $breakpoint-s) {
+    padding: 12px;
+    bottom: 10px;
+    border-radius: 16px;
+  }
 
   .drag-overlay {
     width: 100%;
@@ -209,6 +268,29 @@
       background: var(--bg-weak);
       color: var(--text);
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+      font-size: 16px;
+      
+      @media (max-width: $breakpoint-m) {
+        font-size: 16px;
+      }
+      
+      @media (max-width: $breakpoint-s) {
+        font-size: 18px;
+        line-height: 24px;
+        padding: 10px;
+        min-height: 54px;
+      }
+      
+      &::placeholder {
+        color: var(--text-weak);
+        opacity: 0.7;
+        font-size: 16px;
+        
+        @media (max-width: $breakpoint-s) {
+          font-size: 18px;
+        }
+      }
+      
       @include scrollbar;
     }
   }
@@ -218,6 +300,10 @@
     align-items: center;
     justify-content: space-between;
     gap: 10px;
+    
+    @media (max-width: $breakpoint-s) {
+      margin-top: 6px;
+    }
 
     button {
       background: none;
@@ -227,9 +313,19 @@
       width: 44px;
       padding: 8px;
       border-radius: 50%;
+      
+      @media (max-width: $breakpoint-s) {
+        height: 50px;
+        width: 50px;
+        padding: 10px;
+      }
 
       &.send-btn svg {
         fill: var(--stroke-extremestrong);
+        
+        @media (max-width: $breakpoint-s) {
+          transform: scale(1.2);
+        }
       }
 
       &:hover {
@@ -365,6 +461,10 @@
   border-radius: 18px;
   word-wrap: break-word;
   position: relative;
+  
+  @media (max-width: $breakpoint-s) {
+    padding: 8px 12px;
+  }
 
   .message-images {
     display: flex;
@@ -464,6 +564,12 @@
     padding-bottom: 0;
     margin-left: 0;
     margin-bottom: 0;
+    
+    @media (max-width: $breakpoint-s) {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
 
     p {
       padding-left: 0;
@@ -963,4 +1069,12 @@
   padding: 1em;
   margin: 0.5em 0;
   color: var(--text-weak);
+}
+
+// Add responsive styles for source panel inside chat
+.source-panel {
+  @media (max-width: $breakpoint-s) {
+    width: 100%;
+    max-width: 100%;
+  }
 }
