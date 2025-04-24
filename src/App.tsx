@@ -26,12 +26,36 @@ const BetaOverlay = () => {
       fontSize: '28px',
       fontWeight: 'bold',
       pointerEvents: 'none',
-      zIndex: 9999,
       transform: 'translateZ(0)',
       userSelect: 'none',
       isolation: 'isolate',
     }}>
       BETA
+    </div>
+  )
+}
+
+// Corner logo component
+const CornerLogo = () => {
+  
+  return (
+    <div
+      style={{
+        position: 'fixed',
+        bottom: '20px',
+        right: '20px',
+        zIndex: 9999,
+        cursor: 'pointer',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        transform: 'translateZ(0)',
+        isolation: 'isolate',
+      }}
+    >
+      <a href="https://bit.ly/4jRx5uv" target="_blank" rel="noopener noreferrer">
+        <img src="./flux-logo-white.png" alt="Fluxinc logo" width="120" height="40" />
+      </a>
     </div>
   )
 }
@@ -81,6 +105,7 @@ function App() {
       <RouterProvider router={router} />
       {isElectron && <Updater />}
       <BetaOverlay />
+      <CornerLogo />
     </>
   )
 }
