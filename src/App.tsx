@@ -24,7 +24,7 @@ const CornerLogo = () => {
     <div
       className="corner-logo"
     >
-      <a href="https://bit.ly/4jRx5uv" target="_blank" rel="noopener noreferrer">
+      <a href="https://sh.fluxinc.co/about-sbi" target="_blank" rel="noopener noreferrer">
         <img 
           src="./flux-logo-white.png" 
           alt="Fluxinc logo" 

@@ -57,6 +57,7 @@ body {
   justify-content: center;
   transform: translateZ(0);
   isolation: isolate;
+  opacity: 0.4;
 }
 
 // We're now handling logo inversion directly in the React component
