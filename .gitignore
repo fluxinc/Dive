@@ -50,3 +50,5 @@ host-deps/
 
 # development tmp files
 .config/
+
+.vscode/
