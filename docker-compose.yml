@@ -1,0 +1,66 @@
+services:
+  frontend:
+    build:
+      context: ./
+      dockerfile: Dockerfile.frontend
+    container_name: dive-frontend
+    environment:
+      - NODE_ENV=development
+      - VITE_DEV_SERVER_URL=http://localhost:7777/
+      - BACKEND_URL=http://dive-backend:61990
+      - MCP_URL=http://dive-backend:3000/mcp
+      - SKIP_POSTINSTALL=1
+    volumes:
+      - ./src:/app/src
+      - ./public:/app/public
+      - ./config:/app/config
+      - ./vite.config.ts:/app/vite.config.ts
+    networks:
+      - dive-network
+    ports:
+      - 7777:7777
+    restart: unless-stopped
+
+  backend:
+    container_name: dive-backend
+    build:
+      context: ./mcp-host
+      dockerfile: Dockerfile
+      args:
+        - MCP_REPO_URL=github.com/fluxinc/rag-mcp-server.git
+        - MCP_REPO_BRANCH=master
+        - GITHUB_USER=${GITHUB_USER:-}
+        - GITHUB_TOKEN=${GITHUB_TOKEN:-}
+      x-bake:
+        tags:
+          - dive-backend:latest
+        platforms:
+          - linux/amd64
+        cache-from:
+          - type=local,src=./docker-cache
+        cache-to:
+          - type=local,dest=./docker-cache,mode=max
+    ports:
+      - "61990:61990"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - DEBUG=1
+      - DATABRIDGE_SERVER_URL=http://localhost:8000
+      - NODE_ENV=production
+      - LOG_FILE_PATH=/app/mcp-server/logs/mcp-server.log
+      - CORS_ORIGIN=http://dive-frontend:7777
+      - DIVE_CUSTOM_RULES_CONTENT=You are a helpful assistant that answers questions about the medical concept of \"dense breasts\". Your main source of information is a database of documents that relate to dense breasts, breast cancer, and breast cancer screening - including other related fields such as insurance and treatment. You fetch information from this database by calling the query tool with the user's query. Whenever a user asks a question relating to the topic, first use the query tool to get information from the database. If you do not get any data you may use your own knowledge base, but be sure to inform the user of that. You check the status of the database server by using the health tool, but do not use the health tool before any other tools. If you make a tool call to the query, you will pass the user's message with no changes. Preserve any acronyms exactly as they are in the user's message. If you receive a list of sources relevant to your query, you must NEVER EVER DISPLAY THEM IN YOUR RESPONSE.
+      - WATCHDOG_TIMEOUT=5
+    volumes:
+      - ./mcp-host/db.sqlite:/app/db.sqlite
+      - ./logs:/app/logs
+      - ./mcp-host/dive_mcp_host:/app/dive_mcp_host
+      - ./mcp-host/setup.py:/app/setup.py
+      - ./mcp-host/pyproject.toml:/app/pyproject.toml
+    networks:
+      - dive-network
+    restart: unless-stopped
+
+networks:
+  dive-network:
+    driver: bridge
