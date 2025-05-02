@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next"
 import Select from "../../components/Select"
 import { closeOverlayAtom } from "../../atoms/layerState"
 import React, { useState, useEffect } from "react"
-
+import {DevModeOnlyComponent} from "../../components/DevModeOnlyComponent"
 import ThemeSwitch from "../../components/ThemeSwitch"
 import Switch from "../../components/Switch"
 import { getAutoDownload, setAutoDownload as _setAutoDownload } from "../../updater"
@@ -259,10 +259,11 @@ const System = () => {
           )}
 
           {/* clear all chats */}
-          <div className="system-list-section">
-            <div className="system-list-content">
-              <span className="system-list-name">{t("system.clearAllChats")}:</span>
-            </div>
+          <DevModeOnlyComponent component={
+            <div className="system-list-section">
+              <div className="system-list-content">
+                <span className="system-list-name">{t("system.clearAllChats")}:</span>
+              </div>
             <div className="system-list-switch-container">
               <button 
                 className="clear-all-chats-btn"
@@ -274,7 +275,8 @@ const System = () => {
                 {t("system.clearAllChatsButton")}
               </button>
             </div>
-          </div>
+            </div>
+          } />
         </div>
       </div>
 
