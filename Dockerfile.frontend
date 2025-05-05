@@ -38,4 +38,4 @@ COPY . .
 
 # Run the dev server directly using the shell
 RUN npm run build
-CMD sh -c "echo 'Starting Dive app with latest code...' && npm run dev -- --host 0.0.0.0 --port 7777" 
+CMD sh -c "echo 'Starting Dive app with latest code...' && npm run preview -- --host 0.0.0.0 --port 7777" 
