@@ -20,7 +20,6 @@ services:
     ports:
       - 7777:7777
     restart: unless-stopped
-
   backend:
     container_name: dive-backend
     build:
@@ -45,7 +44,7 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
       - DEBUG=1
-      - DATABRIDGE_SERVER_URL=http://localhost:8000
+      - DATABRIDGE_SERVER_URL=http://morphik:8000
       - NODE_ENV=production
       - LOG_FILE_PATH=/app/mcp-server/logs/mcp-server.log
       - CORS_ORIGIN=http://dive-frontend:7777
@@ -59,8 +58,10 @@ services:
       - ./mcp-host/pyproject.toml:/app/pyproject.toml
     networks:
       - dive-network
+      - databridge-core_morphik-network
     restart: unless-stopped
-
 networks:
   dive-network:
     driver: bridge
+  databridge-core_morphik-network:
+    external: true
