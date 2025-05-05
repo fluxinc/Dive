@@ -280,6 +280,7 @@ const ChatWindow = () => {
     const body = JSON.stringify({
       chatId: currentChatId.current,
       messageId: prevMessages.isSent ? prevMessages.id : messageId,
+      sessionId: sessionId
     })
 
     handlePost(body, "json", "/api/chat/retry")
@@ -316,6 +317,7 @@ const ChatWindow = () => {
     const body = new FormData()
     body.append("chatId", currentChatId.current)
     body.append("messageId", prevMessages.isSent ? prevMessages.id : messageId)
+    body.append("sessionId", sessionId)
     body.append("content", newText)
 
     handlePost(body, "formData", "/api/chat/edit")
