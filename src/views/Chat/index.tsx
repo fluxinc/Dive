@@ -67,6 +67,10 @@ const ChatWindow = () => {
       const data = await response.json()
 
       if (data.success) {
+        if (!data.data) {
+          navigate("/", { replace: true })
+          return
+        }
         currentChatId.current = id
         setWindowTitle(`${data.data.chat.title} - AI Assistant`)
 
