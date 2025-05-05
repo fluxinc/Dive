@@ -95,7 +95,13 @@ const HistorySidebar = ({ onNewChat }: Props) => {
 
     try {
       const response = await fetch(`/api/chat/${deletingChatId}`, {
-        method: "DELETE"
+        method: "DELETE",
+        body: JSON.stringify({
+          sessionId: currentSessionId
+        }),
+        headers: {
+          "Content-Type": "application/json"
+        }
       })
       const data = await response.json()
 
