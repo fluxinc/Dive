@@ -210,6 +210,28 @@
     border-radius: 16px;
   }
 
+  &.different-session {
+    border-color: var(--border-warn);
+    
+    .input-wrapper {
+      textarea {
+        color: var(--text-weak);
+        cursor: not-allowed;
+        
+        &::placeholder {
+          color: var(--text-warn);
+        }
+      }
+    }
+    
+    .input-actions {
+      button {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+    }
+  }
+
   .drag-overlay {
     width: 100%;
     height: 100%;

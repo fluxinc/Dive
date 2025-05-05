@@ -1,9 +1,11 @@
 {
   "header": {
-    "title": "DenseBreast-Info.org Tutor"
+    "title": "DenseBreastInfo.org Assistant"
   },
   "chat": {
     "placeholder": "Ask any question about dense breasts...",
+    "differentSessionPlaceholder": "This chat is from a different session - read only",
+    "differentSessionBanner": "This chat is from a different browser session and is read-only",
     "newChat": "New Chat",
     "newChatTooltip": "Start a new conversation",
     "history": "History",
@@ -31,7 +33,9 @@
     "toolCalls": "🛠 {{name}} Tool Call Result",
     "unsupportTools": "{{model}} does not support Tool Calls",
     "dragFiles": "Drop files here to add to chat",
-    "sources": "Sources"
+    "sources": "Sources",
+    "currentSession": "Current Session",
+    "recentChats": "Recent Chats"
   },
   "welcome": {
     "title": "Welcome to Dive AI",

@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import Tooltip from "../../components/Tooltip"
 import useHotkeyEvent from "../../hooks/useHotkeyEvent"
 import Textarea from "../../components/WrappedTextarea"
-import { lastMessageAtom } from "../../atoms/chatState"
+import { lastMessageAtom, sessionIdAtom } from "../../atoms/chatState"
 import { useAtomValue } from "jotai"
 import { activeConfigAtom, currentModelSupportToolsAtom, isConfigActiveAtom } from "../../atoms/configState"
 
@@ -11,6 +11,7 @@ interface Props {
   onSendMessage?: (message: string, files?: FileList) => void
   disabled?: boolean
   onAbort: () => void
+  chatSessionId?: string | null
 }
 
 interface FilePreview {
@@ -24,7 +25,7 @@ const ACCEPTED_FILE_TYPES = [
   '*/*'
 ].join(',')
 
-const ChatInput: React.FC<Props> = ({ onSendMessage, disabled, onAbort }) => {
+const ChatInput: React.FC<Props> = ({ onSendMessage, disabled, onAbort, chatSessionId }) => {
   const { t } = useTranslation()
   const [message, setMessage] = useState("")
   const [previews, setPreviews] = useState<FilePreview[]>([])
@@ -39,10 +40,19 @@ const ChatInput: React.FC<Props> = ({ onSendMessage, disabled, onAbort }) => {
   const supportTools = useAtomValue(currentModelSupportToolsAtom)
   const activeConfig = useAtomValue(activeConfigAtom)
   const [isDragging, setIsDragging] = useState(false)
+  const currentSessionId = useAtomValue(sessionIdAtom)
+  
+  // Check if this chat belongs to the current session
+  const isNotCurrentSession = chatSessionId !== null && chatSessionId !== undefined && chatSessionId !== currentSessionId
+  const isDisabled = disabled || isNotCurrentSession
 
   const formatFileSize = useCallback((bytes: number): string => {
-    if (bytes < 1024) return bytes + ' B'
-    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB'
+    if (bytes < 1024) {
+      return bytes + ' B'
+    }
+    if (bytes < 1024 * 1024) {
+      return (bytes / 1024).toFixed(1) + ' KB'
+    }
     return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
   }, [])
 
@@ -174,12 +184,12 @@ const ChatInput: React.FC<Props> = ({ onSendMessage, disabled, onAbort }) => {
   }, [])
 
   useEffect(() => {
-    if (prevDisabled.current && !disabled) {
+    if (prevDisabled.current && !isDisabled) {
       textareaRef.current?.focus()
     }
-    prevDisabled.current = disabled
+    prevDisabled.current = isDisabled
     setIsAborting(false)
-  }, [disabled])
+  }, [isDisabled])
 
   useEffect(() => {
     const handleKeydown = (e: KeyboardEvent) => {
@@ -232,7 +242,7 @@ const ChatInput: React.FC<Props> = ({ onSendMessage, disabled, onAbort }) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if ((!message.trim() && !uploadedFiles.current.length) || !onSendMessage || disabled || !hasActiveConfig)
+    if ((!message.trim() && !uploadedFiles.current.length) || !onSendMessage || isDisabled || !hasActiveConfig)
       return
 
     onSendMessage(message, fileInputRef.current?.files || undefined)
@@ -259,7 +269,7 @@ const ChatInput: React.FC<Props> = ({ onSendMessage, disabled, onAbort }) => {
       return
     }
 
-    if (e.key === "Enter" && disabled) {
+    if (e.key === "Enter" && isDisabled) {
       return
     }
 
@@ -304,6 +314,14 @@ const ChatInput: React.FC<Props> = ({ onSendMessage, disabled, onAbort }) => {
     }
   }
 
+  // Get the appropriate placeholder text
+  const getPlaceholderText = () => {
+    if (isNotCurrentSession) {
+      return t("chat.differentSessionPlaceholder")
+    }
+    return t("chat.placeholder")
+  }
+
   return (
     <div className="chat-input-wrapper">
       {activeConfig?.model && activeConfig?.model !== "none" && !supportTools && (
@@ -317,12 +335,12 @@ const ChatInput: React.FC<Props> = ({ onSendMessage, disabled, onAbort }) => {
         </div>
       )}
       <footer
-        className="chat-input"
+        className={`chat-input ${isNotCurrentSession ? "different-session" : ""}`}
         onDragOver={handleDragOver}
         onDrop={handleDrop}
       >
         <div
-          className={`drag-overlay ${isDragging ? 'show' : ''}`}
+          className={`drag-overlay ${isDragging ? "show" : ""}`}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
         >
@@ -344,8 +362,9 @@ const ChatInput: React.FC<Props> = ({ onSendMessage, disabled, onAbort }) => {
             onKeyDown={onKeydown}
             onCompositionStart={handleCompositionStart}
             onCompositionEnd={handleCompositionEnd}
-            placeholder={t('chat.placeholder')}
+            placeholder={getPlaceholderText()}
             rows={1}
+            disabled={isNotCurrentSession}
           />
         </div>
         <div className="input-actions">
@@ -360,7 +379,7 @@ const ChatInput: React.FC<Props> = ({ onSendMessage, disabled, onAbort }) => {
           <button
             className="upload-btn"
             onClick={handleFileClick}
-            disabled={disabled}
+            disabled={isDisabled}
             title={t('chat.uploadFile')}
           >
             <svg width="24" height="24" viewBox="0 0 24 24">
@@ -387,7 +406,7 @@ const ChatInput: React.FC<Props> = ({ onSendMessage, disabled, onAbort }) => {
               <button
                 className="send-btn"
                 onClick={handleSubmit}
-                disabled={disabled || !hasActiveConfig}
+                disabled={isDisabled || !hasActiveConfig}
               >
                 <svg width="24" height="24" viewBox="0 0 24 24">
                   <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
