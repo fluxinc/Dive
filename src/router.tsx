@@ -1,4 +1,4 @@
-import { createHashRouter } from "react-router-dom"
+import { createHashRouter, Navigate } from "react-router-dom"
 import Layout from "./views/Layout"
 import Chat from "./views/Chat"
 import Welcome from "./views/Welcome"
@@ -24,6 +24,11 @@ export const router = createHashRouter([
       {
         path: "setup",
         element: <Setup />
+      },
+      // Navigate to the root page if the route is not found - stops 404 errors
+      {
+        path: "*",
+        element: <Navigate to="/" replace />
       }
     ]
   }
