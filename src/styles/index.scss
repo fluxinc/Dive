@@ -117,7 +117,7 @@ body {
 }
 
 .beta-overlay {
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(0, 0, 0, 0.5);
   padding: 4px 8px;
   border-radius: 4px;
   font-weight: bold;
@@ -125,4 +125,8 @@ body {
   transform: translateZ(0);
   user-select: none;
   isolation: isolate;
+}
+
+[data-theme='dark'] .beta-overlay {
+  color: rgba(255, 255, 255, 0.5);
 }
