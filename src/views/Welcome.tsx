@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom"
 import { useSetAtom, useAtomValue } from "jotai"
 import { codeStreamingAtom } from "../atoms/codeStreaming"
 import { useTranslation } from "react-i18next"
-import { historiesAtom, loadHistoriesAtom, sessionHistoriesAtom, loadSessionHistoriesAtom } from "../atoms/historyState"
+import { sessionHistoriesAtom, loadSessionHistoriesAtom } from "../atoms/historyState"
 import { activeConfigAtom, currentModelSupportToolsAtom, isConfigActiveAtom, isConfigNotInitializedAtom } from "../atoms/configState"
 import Setup from "./Setup"
 import { openOverlayAtom } from "../atoms/layerState"
@@ -13,7 +13,6 @@ import Tooltip from "../components/Tooltip"
 import { enabledToolsAtom, loadToolsAtom } from "../atoms/toolState"
 import { DevModeOnlyComponent } from "../components/DevModeOnlyComponent"
 import { windowTitleAtom } from "../atoms/windowState"
-import { sessionIdAtom } from "../atoms/chatState"
 
 const formatFileSize = (bytes: number) => {
   if (bytes === 0)
@@ -32,11 +31,8 @@ const Welcome = () => {
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
   const updateStreamingCode = useSetAtom(codeStreamingAtom)
-  const histories = useAtomValue(historiesAtom)
-  const loadHistories = useSetAtom(loadHistoriesAtom)
   const sessionHistories = useAtomValue(sessionHistoriesAtom)
   const loadSessionHistories = useSetAtom(loadSessionHistoriesAtom)
-  const _sessionId = useAtomValue(sessionIdAtom)
   const isConfigNotInitialized = useAtomValue(isConfigNotInitializedAtom)
   const isComposing = useRef(false)
   const openOverlay = useSetAtom(openOverlayAtom)
@@ -49,13 +45,6 @@ const Welcome = () => {
   const activeConfig = useAtomValue(activeConfigAtom)
   const [isDragging, setIsDragging] = useState(false)
 
-  // Computed property for non-duplicated histories
-  const uniqueRecentChats = React.useMemo(() => {
-    return histories
-      .filter(history => !sessionHistories.some(sessionHistory => sessionHistory.id === history.id))
-      .slice(0, 3)
-  }, [histories, sessionHistories])
-
   useEffect(() => {
     setWindowTitle(t("header.title"))
     loadTools()
@@ -65,10 +54,6 @@ const Welcome = () => {
     updateStreamingCode(null)
   }, [updateStreamingCode])
 
-  useEffect(() => {
-    loadHistories()
-  }, [loadHistories])
-  
   useEffect(() => {
     loadSessionHistories()
   }, [loadSessionHistories])
@@ -363,29 +348,7 @@ const Welcome = () => {
         <div className="suggestions">
           {sessionHistories.length > 0 && (
             <>
-              <h3 className="suggestions-category">{t("chat.currentSession")}</h3>
               {sessionHistories.slice(0, 3).map(history => (
-                <div
-                  key={history.id}
-                  className="suggestion-item"
-                  onClick={() => navigate(`/chat/${history.id}`)}
-                >
-                  <div className="content-wrapper">
-                    <strong>{history.title || t("chat.untitledChat")}</strong>
-                  </div>
-                  <div className="bottom-row">
-                    <p>{new Date(history.createdAt).toLocaleString()}</p>
-                    <span className="arrow">→</span>
-                  </div>
-                </div>
-              ))}
-            </>
-          )}
-          
-          {uniqueRecentChats.length > 0 && (
-            <>
-              <h3 className="suggestions-category">{t("chat.recentChats")}</h3>
-              {uniqueRecentChats.map(history => (
                 <div
                   key={history.id}
                   className="suggestion-item"

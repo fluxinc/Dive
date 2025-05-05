@@ -2,7 +2,7 @@ import React, { useState, useCallback, useEffect, useRef } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
 import { useAtom, useAtomValue, useSetAtom } from "jotai"
 import { sidebarVisibleAtom } from "../atoms/sidebarState"
-import { historiesAtom, loadHistoriesAtom } from "../atoms/historyState"
+import { sessionHistoriesAtom, loadSessionHistoriesAtom } from "../atoms/historyState"
 import { useTranslation } from "react-i18next"
 import { showToastAtom } from "../atoms/toastState"
 import Tooltip from "./Tooltip"
@@ -53,8 +53,8 @@ const HistorySidebar = ({ onNewChat }: Props) => {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const location = useLocation()
-  const histories = useAtomValue(historiesAtom)
-  const loadHistories = useSetAtom(loadHistoriesAtom)
+  const histories = useAtomValue(sessionHistoriesAtom)
+  const loadHistories = useSetAtom(loadSessionHistoriesAtom)
   const [deletingChatId, setDeletingChatId] = useState<string | null>(null)
   const showToast = useSetAtom(showToastAtom)
   const _openOverlay = useSetAtom(openOverlayAtom)

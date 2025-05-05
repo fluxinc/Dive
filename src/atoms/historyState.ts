@@ -32,7 +32,7 @@ export const loadSessionHistoriesAtom = atom(
   async (get, set) => {
     try {
       const sessionId = get(sessionIdAtom)
-      const response = await fetch(`/api/chat/list?sort_by=msg&session_id=${encodeURIComponent(sessionId)}`)
+      const response = await fetch(`/api/chat/list?sort_by=msg&sessionId=${encodeURIComponent(sessionId)}`)
       const data = await response.json()
 
       if (data.success) {
