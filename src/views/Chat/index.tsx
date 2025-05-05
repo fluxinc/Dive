@@ -2,12 +2,12 @@ import React, { useRef, useState, useCallback, useEffect } from "react"
 import { useLocation, useNavigate, useParams } from "react-router-dom"
 import ChatMessages, { Message, Source } from "./ChatMessages"
 import ChatInput from "./ChatInput"
-import { useAtom, useSetAtom } from 'jotai'
-import { codeStreamingAtom } from '../../atoms/codeStreaming'
+import { useAtom, useSetAtom } from "jotai"
+import { codeStreamingAtom } from "../../atoms/codeStreaming"
 import useHotkeyEvent from "../../hooks/useHotkeyEvent"
 import { showToastAtom } from "../../atoms/toastState"
 import { useTranslation } from "react-i18next"
-import { currentChatIdAtom, isChatStreamingAtom, lastMessageAtom } from "../../atoms/chatState"
+import { currentChatIdAtom, isChatStreamingAtom, lastMessageAtom, sessionIdAtom } from "../../atoms/chatState"
 import { safeBase64Encode } from "../../util"
 import { windowTitleAtom } from "../../atoms/windowState"
 
@@ -53,10 +53,12 @@ const ChatWindow = () => {
   const setLastMessage = useSetAtom(lastMessageAtom)
   const setCurrentChatId = useSetAtom(currentChatIdAtom)
   const [isChatStreaming, setIsChatStreaming] = useAtom(isChatStreamingAtom)
+  const [sessionId] = useAtom(sessionIdAtom)
   const toolCallResults = useRef<string>("")
   const toolResultCount = useRef(0)
   const toolResultTotal = useRef(0)
   const setWindowTitle = useSetAtom(windowTitleAtom)
+  const [chatSessionId, setChatSessionId] = useState<string | null>(null)
 
   const loadChat = useCallback(async (id: string) => {
     try {
@@ -125,7 +127,7 @@ const ChatWindow = () => {
 
                 const content = `${callContent}${resultContent}`
                 const toolName = toolsName.size > 0 ? JSON.stringify(Array.from(toolsName).join(", ")) : ""
-                acc[acc.length - 1].text += `\n<tool-call name=${toolName || '""'}>${content}</tool-call>\n\n`
+                acc[acc.length - 1].text += `\n<tool-call name="${toolName || '""'}">${content}</tool-call>\n\n`
 
                 toolCallBuf = []
                 toolResultBuf = []
@@ -203,6 +205,8 @@ const ChatWindow = () => {
 
     if (currentChatId.current)
       formData.append("chatId", currentChatId.current)
+    
+    formData.append("sessionId", sessionId)
 
     if (files) {
       Array.from(files).forEach(file => {
@@ -230,7 +234,7 @@ const ChatWindow = () => {
     scrollToBottom()
 
     handlePost(formData, "formData", "/api/chat")
-  }, [isChatStreaming, scrollToBottom])
+  }, [isChatStreaming, scrollToBottom, sessionId])
 
   const onAbort = useCallback(async () => {
     if (!isChatStreaming || !currentChatId.current)
@@ -276,6 +280,7 @@ const ChatWindow = () => {
     const body = JSON.stringify({
       chatId: currentChatId.current,
       messageId: prevMessages.isSent ? prevMessages.id : messageId,
+      sessionId: sessionId
     })
 
     handlePost(body, "json", "/api/chat/retry")
@@ -312,6 +317,7 @@ const ChatWindow = () => {
     const body = new FormData()
     body.append("chatId", currentChatId.current)
     body.append("messageId", prevMessages.isSent ? prevMessages.id : messageId)
+    body.append("sessionId", sessionId)
     body.append("content", newText)
 
     handlePost(body, "formData", "/api/chat/edit")
@@ -560,6 +566,27 @@ const ChatWindow = () => {
     lastChatId.current = chatId
   }, [updateStreamingCode, chatId])
 
+  // Add a function to fetch chat details including session_id
+  const fetchChatDetails = useCallback(async (chatId: string) => {
+    try {
+      const response = await fetch(`/api/chat/${chatId}`)
+      const data = await response.json()
+      
+      if (data.success && data.data && data.data.chat) {
+        setChatSessionId(data.data.chat.session_id)
+      }
+    } catch (error) {
+      console.warn("Error fetching chat details:", error)
+    }
+  }, [])
+
+  // Update the useEffect that handles the chat ID change
+  useEffect(() => {
+    if (chatId) {
+      fetchChatDetails(chatId)
+    }
+  }, [chatId, fetchChatDetails])
+
   return (
     <div className="chat-page">
       <div className="chat-container">
@@ -574,6 +601,7 @@ const ChatWindow = () => {
             onSendMessage={onSendMsg}
             disabled={isChatStreaming}
             onAbort={onAbort}
+            chatSessionId={chatSessionId}
           />
         </div>
       </div>

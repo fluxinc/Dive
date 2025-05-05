@@ -1,9 +1,9 @@
 import React, { useState, useRef, KeyboardEvent, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
-import { useSetAtom, useAtom, useAtomValue } from "jotai"
+import { useSetAtom, useAtomValue } from "jotai"
 import { codeStreamingAtom } from "../atoms/codeStreaming"
 import { useTranslation } from "react-i18next"
-import { historiesAtom, loadHistoriesAtom } from "../atoms/historyState"
+import { sessionHistoriesAtom, loadSessionHistoriesAtom } from "../atoms/historyState"
 import { activeConfigAtom, currentModelSupportToolsAtom, isConfigActiveAtom, isConfigNotInitializedAtom } from "../atoms/configState"
 import Setup from "./Setup"
 import { openOverlayAtom } from "../atoms/layerState"
@@ -31,8 +31,8 @@ const Welcome = () => {
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
   const updateStreamingCode = useSetAtom(codeStreamingAtom)
-  const histories = useAtomValue(historiesAtom)
-  const loadHistories = useSetAtom(loadHistoriesAtom)
+  const sessionHistories = useAtomValue(sessionHistoriesAtom)
+  const loadSessionHistories = useSetAtom(loadSessionHistoriesAtom)
   const isConfigNotInitialized = useAtomValue(isConfigNotInitializedAtom)
   const isComposing = useRef(false)
   const openOverlay = useSetAtom(openOverlayAtom)
@@ -46,17 +46,17 @@ const Welcome = () => {
   const [isDragging, setIsDragging] = useState(false)
 
   useEffect(() => {
-    setWindowTitle(t("header.title"));
-    loadTools();
-  }, []);
+    setWindowTitle(t("header.title"))
+    loadTools()
+  }, [])
 
   useEffect(() => {
     updateStreamingCode(null)
   }, [updateStreamingCode])
 
   useEffect(() => {
-    loadHistories()
-  }, [loadHistories])
+    loadSessionHistories()
+  }, [loadSessionHistories])
 
   useHotkeyEvent("chat-input:upload-file", () => {
     if (fileInputRef.current) {
@@ -222,7 +222,7 @@ const Welcome = () => {
             onDrop={handleDrop}
           >
             <div
-              className={`drag-overlay ${isDragging ? 'show' : ''}`}
+              className={`drag-overlay ${isDragging ? "show" : ""}`}
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
             >
@@ -235,7 +235,7 @@ const Welcome = () => {
                   <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 3H3a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2Z"></path>
                   <path fill="currentColor" d="M6.5 10a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3ZM3 16l4-4 2 2 6-4.5 4 4.5v1.999L3 16Z"></path>
                 </svg>
-                {t('chat.dragFiles')}
+                {t("chat.dragFiles")}
               </div>
             </div>
             <div className="input-container">
@@ -346,21 +346,25 @@ const Welcome = () => {
         )}
 
         <div className="suggestions">
-          {histories.length > 0 && histories.slice(0, 3).map(history => (
-            <div
-              key={history.id}
-              className="suggestion-item"
-              onClick={() => navigate(`/chat/${history.id}`)}
-            >
-              <div className="content-wrapper">
-                <strong>{history.title || t("chat.untitledChat")}</strong>
-              </div>
-              <div className="bottom-row">
-                <p>{new Date(history.createdAt).toLocaleString()}</p>
-                <span className="arrow">→</span>
-              </div>
-            </div>
-          ))}
+          {sessionHistories.length > 0 && (
+            <>
+              {sessionHistories.slice(0, 3).map(history => (
+                <div
+                  key={history.id}
+                  className="suggestion-item"
+                  onClick={() => navigate(`/chat/${history.id}`)}
+                >
+                  <div className="content-wrapper">
+                    <strong>{history.title || t("chat.untitledChat")}</strong>
+                  </div>
+                  <div className="bottom-row">
+                    <p>{new Date(history.createdAt).toLocaleString()}</p>
+                    <span className="arrow">→</span>
+                  </div>
+                </div>
+              ))}
+            </>
+          )}
         </div>
       </div>
     </div>

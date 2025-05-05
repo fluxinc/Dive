@@ -9,8 +9,7 @@ RUN apk add --no-cache python3 make g++ git curl
 COPY package.json package-lock.json ./
 
 # Create a custom dev script that skips the problematic apply-config.js
-RUN sed -i 's/"postinstall": ".*"/"postinstall": "echo Skipping postinstall in Docker"/' package.json && \
-    sed -i 's/"dev": "node scripts\/apply-config.js && vite --config vite.config.ts"/"dev": "vite --config vite.config.ts --force"/' package.json
+RUN sed -i 's/"postinstall": ".*"/"postinstall": "echo Skipping postinstall in Docker"/' package.json
 
 # Install dependencies with the modified package.json
 RUN npm install
@@ -39,4 +38,4 @@ COPY . .
 
 # Run the dev server directly using the shell
 RUN npm run build
-CMD sh -c "echo 'Starting Dive app with latest code...' && npm run preview -- --host 0.0.0.0 --port 7777" 
+CMD sh -c "echo 'Starting Dive app with latest code...' && npm run dev -- --host 0.0.0.0 --port 7777" 

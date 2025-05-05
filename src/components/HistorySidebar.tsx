@@ -2,15 +2,14 @@ import React, { useState, useCallback, useEffect, useRef } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
 import { useAtom, useAtomValue, useSetAtom } from "jotai"
 import { sidebarVisibleAtom } from "../atoms/sidebarState"
-import { historiesAtom, loadHistoriesAtom } from "../atoms/historyState"
-import Header from "./Header"
+import { sessionHistoriesAtom, loadSessionHistoriesAtom } from "../atoms/historyState"
 import { useTranslation } from "react-i18next"
 import { showToastAtom } from "../atoms/toastState"
 import Tooltip from "./Tooltip"
 import { closeAllOverlaysAtom, openOverlayAtom, OverlayType } from "../atoms/layerState"
 import { useSidebarLayer } from "../hooks/useLayer"
 import useHotkeyEvent from "../hooks/useHotkeyEvent"
-import { currentChatIdAtom } from "../atoms/chatState"
+import { currentChatIdAtom, sessionIdAtom } from "../atoms/chatState"
 import PopupConfirm from "./PopupConfirm"
 import { newVersionAtom } from "../atoms/globalState"
 import UpdateButton from "./UpdateButton"
@@ -54,18 +53,19 @@ const HistorySidebar = ({ onNewChat }: Props) => {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const location = useLocation()
-  const histories = useAtomValue(historiesAtom)
-  const loadHistories = useSetAtom(loadHistoriesAtom)
+  const histories = useAtomValue(sessionHistoriesAtom)
+  const loadHistories = useSetAtom(loadSessionHistoriesAtom)
   const [deletingChatId, setDeletingChatId] = useState<string | null>(null)
   const showToast = useSetAtom(showToastAtom)
   const _openOverlay = useSetAtom(openOverlayAtom)
-  const newVersion = useAtomValue(newVersionAtom)
+  const _newVersion = useAtomValue(newVersionAtom)
   const closeAllOverlays = useSetAtom(closeAllOverlaysAtom)
   const [isVisible, setVisible] = useSidebarLayer(sidebarVisibleAtom)
   const [currentChatId, setCurrentChatId] = useAtom(currentChatIdAtom)
+  const currentSessionId = useAtomValue(sessionIdAtom)
   const containerRef = useRef<HTMLDivElement>(null)
 
-  const isDevMode = useAtomValue(devModeAtom)
+  const _isDevMode = useAtomValue(devModeAtom)
   const openOverlay = useCallback((overlay: OverlayType) => {
     _openOverlay(overlay)
     setVisible(false)
@@ -79,7 +79,9 @@ const HistorySidebar = ({ onNewChat }: Props) => {
   }, [isVisible, loadHistories])
 
   useHotkeyEvent("chat:delete", () => {
-    currentChatId && setDeletingChatId(currentChatId)
+    if (currentChatId) {
+      setDeletingChatId(currentChatId)
+    }
   })
 
   const confirmDelete = (e: React.MouseEvent, chatId: string) => {
@@ -93,7 +95,13 @@ const HistorySidebar = ({ onNewChat }: Props) => {
 
     try {
       const response = await fetch(`/api/chat/${deletingChatId}`, {
-        method: "DELETE"
+        method: "DELETE",
+        body: JSON.stringify({
+          sessionId: currentSessionId
+        }),
+        headers: {
+          "Content-Type": "application/json"
+        }
       })
       const data = await response.json()
 
@@ -114,7 +122,7 @@ const HistorySidebar = ({ onNewChat }: Props) => {
           type: "error"
         })
       }
-    } catch (error) {
+    } catch (_error) {
       showToast({
         message: t("chat.deleteFailed"),
         type: "error"
@@ -162,7 +170,6 @@ const HistorySidebar = ({ onNewChat }: Props) => {
   return (
     <>
       <div className={`history-sidebar ${isVisible ? "visible" : ""}`} tabIndex={0} onBlur={onBlur} ref={containerRef}>
-        {/* <Header /> */}
         <div className="history-header">
           <Tooltip
             content={`${t("chat.newChatTooltip")} Ctrl + Shift + O`}
@@ -185,17 +192,19 @@ const HistorySidebar = ({ onNewChat }: Props) => {
                   {new Date(chat.createdAt).toLocaleString()}
                 </div>
               </div>
-              <DevModeOnlyComponent component={
-              <button
-                className="delete-btn"
-                onClick={(e) => confirmDelete(e, chat.id)}
-                title={t("chat.deleteChat")}
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24">
-                  <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
-                </svg>
-              </button>
-              } />
+              {chat.session_id === currentSessionId && (
+                <DevModeOnlyComponent component={
+                <button
+                  className="delete-btn"
+                  onClick={(e) => confirmDelete(e, chat.id)}
+                  title={t("chat.deleteChat")}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24">
+                    <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+                  </svg>
+                </button>
+                } />
+              )}
             </div>
           ))}
         </div>
