@@ -25,11 +25,6 @@ services:
     build:
       context: ./mcp-host
       dockerfile: Dockerfile
-      args:
-        - MCP_REPO_URL=github.com/fluxinc/rag-mcp-server.git
-        - MCP_REPO_BRANCH=master
-        - GITHUB_USER=${GITHUB_USER:-}
-        - GITHUB_TOKEN=${GITHUB_TOKEN:-}
       x-bake:
         tags:
           - dive-backend:latest
