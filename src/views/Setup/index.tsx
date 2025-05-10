@@ -1,6 +1,6 @@
 import React, { useState } from "react"
 import { useSetAtom } from "jotai"
-import { InterfaceProvider, defaultInterface, mcpConnectionInterface } from "../../atoms/interfaceState"
+import { InterfaceProvider, defaultInterface } from "../../atoms/interfaceState"
 import { useTranslation } from "react-i18next"
 import { useNavigate, useLocation } from "react-router-dom"
 import ModelConfigForm from "./ModelConfigForm"
@@ -54,7 +54,7 @@ const Setup = () => {
         <ModelConfigForm
           provider={localProvider}
           // fields={mcpConnectionInterface}
-          fields={{...defaultInterface[localProvider], ...mcpConnectionInterface}}
+          fields={{...defaultInterface[localProvider]}}
           onSubmit={handleSubmit}
           onProviderChange={setLocalProvider}
           submitLabel="setup.submit"
