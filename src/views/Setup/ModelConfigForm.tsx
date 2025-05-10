@@ -10,7 +10,6 @@ import { showToastAtom } from "../../atoms/toastState"
 import Input from "../../components/WrappedInput"
 import Tooltip from "../../components/Tooltip"
 import { transformModelProvider } from "../../helper/config"
-import { DevModeOnlyComponent } from "../../components/DevModeOnlyComponent"
 
 interface ModelConfigFormProps {
   provider: InterfaceProvider
@@ -231,7 +230,7 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
         }
       }
 
-      const response = await fetch("/api/modelVerify", {
+      const response = await fetch("/model_verify", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -346,7 +345,7 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
 
   return (
     <form onSubmit={handleSubmit}>
-      <DevModeOnlyComponent component={
+      
         <div className="form-group">
           <label>{t("setup.provider")}</label>
           <select
@@ -359,7 +358,6 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
             ))}
           </select>
         </div>
-      }/>
       
 
       {Object.entries(filteredFields).map(([key, field]) => (
