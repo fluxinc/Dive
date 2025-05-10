@@ -249,14 +249,14 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
       const data = await response.json()
       if (data.success) {
         setIsVerified(true)
-        if(data.connectingSuccess && data.supportTools) {
+        if(data.connecting && data.connecting.success && data.supportTools && data.supportTools.success) {
           setIsVerifyingNoTool(false)
           showToast({
             message: t("setup.verifySuccess"),
             type: "success",
             duration: 5000
           })
-        }else if(data.connectingSuccess || data.supportTools){
+        }else if(data.connecting && data.connecting.success && !(data.supportTools && data.supportTools.success)){
           setIsVerifyingNoTool(true)
           showToast({
             message: t("setup.verifySuccessNoTool"),

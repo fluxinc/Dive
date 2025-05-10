@@ -1,7 +1,7 @@
 import React, { useRef, useState, useCallback, useEffect } from "react"
 import { useLocation, useNavigate, useParams } from "react-router-dom"
 import ChatMessages, { Message, Source } from "./ChatMessages"
-import ChatInput from "./ChatInput"
+import ChatInput from "../../components/ChatInput"
 import { useAtom, useSetAtom } from "jotai"
 import { codeStreamingAtom } from "../../atoms/codeStreaming"
 import useHotkeyEvent from "../../hooks/useHotkeyEvent"
@@ -131,7 +131,8 @@ const ChatWindow = () => {
 
                 const content = `${callContent}${resultContent}`
                 const toolName = toolsName.size > 0 ? JSON.stringify(Array.from(toolsName).join(", ")) : ""
-                acc[acc.length - 1].text += `\n<tool-call name="${toolName || '""'}">${content}</tool-call>\n\n`
+                // eslint-disable-next-line quotes
+                acc[acc.length - 1].text += `\n<tool-call name=${toolName || '""'}>${content}</tool-call>\n\n`
 
                 toolCallBuf = []
                 toolResultBuf = []
@@ -201,7 +202,8 @@ const ChatWindow = () => {
   }, [])
 
   const onSendMsg = useCallback(async (msg: string, files?: FileList) => {
-    if (isChatStreaming) return
+    if (isChatStreaming)
+      return
 
     const formData = new FormData()
     if (msg)
@@ -414,7 +416,7 @@ const ChatWindow = () => {
               case "tool_result":
                 const result = data.content as ToolResult
 
-                toolCallResults.current = toolCallResults.current.replace(`</tool-call>\n`, "")
+                toolCallResults.current = toolCallResults.current.replace("</tool-call>\n", "")
                 toolCallResults.current += `##Tool Result:${safeBase64Encode(JSON.stringify(result.result))}</tool-call>\n`
 
                 setMessages(prev => {
@@ -454,15 +456,11 @@ const ChatWindow = () => {
                 break
 
               case "error":
+                currentText += `\n\nError: ${data.content}`
                 setMessages(prev => {
                   const newMessages = [...prev]
-                  newMessages[newMessages.length - 1] = {
-                    id: `${currentId.current++}`,
-                    text: `Error: ${data.content}`,
-                    isSent: false,
-                    timestamp: Date.now(),
-                    isError: true
-                  }
+                  newMessages[newMessages.length - 1].text = currentText
+                  newMessages[newMessages.length - 1].isError = true
                   return newMessages
                 })
                 break
@@ -553,7 +551,7 @@ const ChatWindow = () => {
 
     if ((state?.initialMessage || state?.files) && !isInitialMessageHandled.current) {
       isInitialMessageHandled.current = true
-      handleInitialMessage(state?.initialMessage || '', state?.files)
+      handleInitialMessage(state?.initialMessage || "", state?.files)
     }
   }, [handleInitialMessage])
 
@@ -602,6 +600,7 @@ const ChatWindow = () => {
             onEdit={onEdit}
           />
           <ChatInput
+            page="chat"
             onSendMessage={onSendMsg}
             disabled={isChatStreaming}
             onAbort={onAbort}

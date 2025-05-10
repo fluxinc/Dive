@@ -28,7 +28,10 @@ export default tseslint.config(
       'nonblock-statement-body-position': ['error', 'below'],
       'brace-style': ['error', '1tbs', { 'allowSingleLine': false }],
       'quotes': ['error', 'double'],
+      'no-case-declarations': 'off',
+      '@typescript-eslint/no-unused-expressions': 'off',
       '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-namespace': 'off',
       '@typescript-eslint/no-unused-vars': ['error', {
         'argsIgnorePattern': '^_',
         'varsIgnorePattern': '^_',

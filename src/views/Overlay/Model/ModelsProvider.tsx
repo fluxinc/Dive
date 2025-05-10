@@ -1,9 +1,9 @@
-import { Dispatch, ReactNode, SetStateAction, createContext, useCallback, useContext, useEffect, useState } from "react";
-import { configAtom, configDictAtom, loadConfigAtom, MultiModelConfig, writeRawConfigAtom, InterfaceModelConfig, prepareModelConfig } from "../../../atoms/configState";
-import { useAtomValue, useSetAtom } from "jotai";
-import { FieldDefinition, InterfaceProvider } from "../../../atoms/interfaceState";
-import { compressData, extractData } from "../../../helper/config";
-import { getVerifyStatus, ModelVerifyStatus } from "./ModelVerify";
+import { Dispatch, ReactNode, SetStateAction, createContext, useContext, useEffect, useState } from "react"
+import { configAtom, configDictAtom, loadConfigAtom, MultiModelConfig, writeRawConfigAtom, InterfaceModelConfig, prepareModelConfig, modelVerifyListAtom } from "../../../atoms/configState"
+import { useAtomValue, useSetAtom } from "jotai"
+import { FieldDefinition, InterfaceProvider } from "../../../atoms/interfaceState"
+import { compressData, extractData } from "../../../helper/config"
+import { getVerifyStatus, ModelVerifyStatus } from "./ModelVerify"
 
 export type ListOption = {
   name: string
@@ -42,6 +42,8 @@ export default function ModelsProvider({
   const [listOptions, setListOptions] = useState<ListOption[]>([])
   const [multiModelConfigList, setMultiModelConfigList] = useState<MultiModelConfig[]>([])
   const [parameter, setParameter] = useState<Record<string, number>>(JSON.parse(localStorage.getItem("ConfigParameter") || "{}"))
+  const allVerifiedList = useAtomValue(modelVerifyListAtom)
+
   const getMultiModelConfigList = () => {
     return new Promise((resolve, reject) => {
       setMultiModelConfigList(prev => {
@@ -97,8 +99,6 @@ export default function ModelsProvider({
   }, [multiModelConfigList])
 
   const fetchListOptions = async (multiModelConfig: MultiModelConfig, fields: Record<string, FieldDefinition>) => {
-    const localListOptions = localStorage.getItem("modelVerify")
-    const allVerifiedList = localListOptions ? JSON.parse(localListOptions) : {}
     const verifyList = allVerifiedList[multiModelConfig.apiKey || multiModelConfig.baseURL]
     const newListOptions: ListOption[] = []
 
@@ -160,8 +160,7 @@ export default function ModelsProvider({
     const _multiModelConfigList = await getMultiModelConfigList()
     const _parameter = await getParameter()
     _multiModelConfigList.forEach((multiModelConfig, index) => {
-      multiModelConfig = Object.assign(multiModelConfig, _parameter)
-      compressedData = Object.assign(compressedData, compressData(multiModelConfig, index))
+      compressedData = Object.assign(compressedData, compressData(multiModelConfig, index, _parameter))
     })
     Object.entries(compressedData).forEach(([key, value]) => {
       if (value !== undefined) {

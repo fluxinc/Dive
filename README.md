@@ -65,7 +65,7 @@ For Linux users: 🐧
 
 While the system comes with a default echo MCP Server, your LLM can access more powerful tools through MCP. Here's how to get started with two beginner-friendly tools: Fetch and Youtube-dl.
 
-![Set MCP](./docs/DIVE_Screenshot_0.7.4.jpg)
+![Set MCP](./docs/ToolsManager.png)
 
 
 ### Quick Setup

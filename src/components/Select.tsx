@@ -1,5 +1,5 @@
-import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
-import { forwardRef } from 'react';
+import * as DropdownMenu from "@radix-ui/react-dropdown-menu"
+import { forwardRef } from "react"
 
 interface Props<T = string>{
   options: {
@@ -10,15 +10,16 @@ interface Props<T = string>{
   value: T
   onSelect: (value: T) => void
   placeholder?: string
-  size?: 'l' | 'm' | 's',
-  type?: 'color' | 'outline'
+  size?: "l" | "m" | "s"
+  type?: "color" | "outline"
   className?: string
   contentClassName?: string
   error?: boolean
-  fill?:  boolean
+  fill?: boolean
   maxHeight?: number
   autoWidth?: boolean
   align?: "center" | "start" | "end"
+  leftSlotType?: "col" | "row"
 }
 
 /** DropdownMenu */
@@ -35,24 +36,25 @@ const Select = forwardRef<HTMLButtonElement|null, Props>(({
   placeholder,
   className,
   contentClassName,
-  size = 'm',
-  type = 'color',
+  size = "m",
+  type = "color",
   error,
   fill,
   maxHeight,
   autoWidth,
-  align = 'start',
+  align = "start",
+  leftSlotType = "col",
   ...rest
 }, ref) => {
   const currentOption = options.find((option) => option.value === value) || null
-  const displayLabel = currentOption && currentOption.label || placeholder || 'Select...'
+  const displayLabel = currentOption && currentOption.label || placeholder || "Select..."
 
   return (
     <DropdownMenu.Root>
       <DropdownMenu.Trigger asChild ref={ref} {...rest} >
         <button
-          className={`select-button ${className} ${error ? 'error' : ''} ${fill ? 'fill' : ''} ${type} ${size}`}
-          color='neutralGrey'
+          className={`select-button ${className} ${error ? "error" : ""} ${fill ? "fill" : ""} ${type} ${size}`}
+          color="neutralGrey"
         >
           <span>{displayLabel}</span>
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 22 22" width="16" height="16">
@@ -65,7 +67,7 @@ const Select = forwardRef<HTMLButtonElement|null, Props>(({
           style={maxHeight ? {maxHeight: `${maxHeight}px`} : {}}
           align={align}
           side='bottom'
-          className={`dropdown-container-wrapper ${contentClassName} ${size} ${!autoWidth ? 'full-width' : ''}`}
+          className={`dropdown-container-wrapper ${contentClassName} ${size} ${!autoWidth ? "full-width" : ""}`}
         >
           {options.map((item, index) => {
             return (
@@ -77,19 +79,19 @@ const Select = forwardRef<HTMLButtonElement|null, Props>(({
                   onSelect(item.value)
                 }}
               >
-                <div className="left-slot">
+                <div className={`left-slot ${leftSlotType}`}>
                   <div className="label">{item.label}</div>
                   {item.info &&
                     <div className="info">{item.info}</div>
                   }
                 </div>
-                { value === item.value &&
-                  <div className="right-slot">
+                <div className="right-slot">
+                  { value === item.value &&
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 22 22" width="22" height="22">
                       <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="m4.67 10.424 4.374 4.748 8.478-7.678"></path>
                     </svg>
-                  </div>
-                }
+                  }
+                </div>
               </DropdownMenu.Item>
             )
           })}

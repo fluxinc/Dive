@@ -30,7 +30,11 @@
     "save": "保存",
     "toolCalls": "🛠 {{name}} ツール呼び出し結果",
     "unsupportTools": "{{model}} はツール呼び出しをサポートしていません",
-    "dragFiles": "ファイルをここにドロップしてチャットに追加"
+    "dragFiles": "ファイルをここにドロップしてチャットに追加",
+    "tools-btn.disable.toast": "Tool Callsを停止しました",
+    "tools-btn.disable": "Tool Callsを停止",
+    "tools-btn.enable.toast": "Tool Callsを有効にしました",
+    "tools-btn.enable": "Tool Callsを有効"
   },
   "welcome": {
     "title": "Dive AI へようこそ",
@@ -44,6 +48,7 @@
     "submit": "設定を保存",
     "provider": "モデルプロバイダー",
     "verify": "モデルを検証",
+    "verifying": "検証中...",
     "verifySuccess": "モデルの検証に成功しました",
     "verifySuccessNoTool": "モデルの検証に成功しましたが、ツール呼び出しはサポートしていません",
     "verifyFailed": "モデルの検証に失敗しました",
@@ -72,6 +77,9 @@
     "cancel": "キャンセル",
     "saveSuccess": "設定が正常に保存されました",
     "saveFailed": "設定の保存に失敗しました",
+    "toggleFailed": "エラーが発生しました",
+    "reloadFailed": "{{toolName}} でエラーが発生し、再読み込みに失敗しました",
+    "reloadAllFailed": "{{number}} 件のツール呼び出しでエラーが発生し、再読み込みに失敗しました",
     "openConfigFolder": "設定フォルダ",
     "openConfigFolder.alt": "設定フォルダを開く",
     "addServer": "追加",
@@ -84,10 +92,12 @@
     "invalidJson": "無効なJSON形式です",
     "updateFailed": "{{serverName}} の読み込みに失敗しました: {{error}}",
     "installFailed": "インストールに失敗しました",
+    "startFailed": "起動に失敗しました",
     "reloadMCPServers": "再読み込み",
-    "reloadMCPServers.alt": "MCPサーバーを再読み込みして更新",
+    "reloadMCPServers.alt": "MCPツールを再読み込みして更新",
     "toolMenu1": "削除",
     "toolMenu2": "編集",
+    "toolMenu3": "再読み込み",
     "delete": "削除",
     "jsonCopy": "コピー",
     "jsonCopied": "コピーしました",
@@ -199,16 +209,24 @@
     "modelSetting": "{{name}} モデル設定",
     "streamingModeTooltip": "ストリーミングモードは、モデルが応答するときに、一度にすべて表示するのではなく、徐々にコンテンツを表示するモードです。ボタンをオフにすると、非ストリーミングモードになり、モデルがコンテンツを完全に生成するのを待ってから一度に表示するため、モデルでのツール呼び出しとの互換性の問題を回避できます。",
     "streamingModeDescription": "モデルの応答表示方法を制御します",
-    "streamingModeAlert": "注意: {{name}} モデルはストリーミングモードでのツール呼び出しをサポートしていません。ツール機能を使用する必要がある場合は、このボタンをオフにして非ストリーミングモードに調整してください。"
+    "streamingModeAlert": "注意：一部のモデルは、ストリーミングモードまたは非ストリーミングモードでのみツール呼び出しをサポートしています。ニーズを十分に理解した上で、このパラメータを調整することをお勧めします。"
   },
   "system": {
     "title": "システム設定",
     "language": "システム言語",
-    "theme": "表示モード",
+    "languageDefault": "システムデフォルト",
+    "languageDescription": "システムインターフェース表示時に使用される言語。モデルで使用される言語はモデル設定ページのプロンプトで変更できます。これはDiveインターフェースで表示される言語です",
+    "theme": "ダークモード",
+    "themeDescription": "システムデフォルト / ダークモードの切り替え",
     "defaultInstructions": "英語で話す",
     "autoDownload": "アップデートを自動ダウンロード",
-    "autoLaunch": "システム起動時に Dive AI を実行",
-    "minimalToTray": "システムトレイに最小化"
+    "autoDownloadDescription": "新バージョンのDIVEを自動的にバックグラウンドでダウンロードします。ユーザーが次回起動時、またはメニューページの「新バージョンアップデート」ボタンをクリックすると、新バージョンが有効になります",
+    "autoLaunch": "自動起動",
+    "autoLaunchDescription": "PC起動時に自動的にDive AIを起動します",
+    "minimalToTray": "最小化",
+    "minimalToTrayDescription": "閉じるとプログラムが終了せず、最小化アイコンに縮小されます",
+    "defaultSystemPrompt": "Diveデフォルトシステムプロンプト",
+    "defaultSystemPromptDescription": "Diveデフォルトシステムプロンプトはチャットのデフォルトのシステムプロンプトとして使用されます。LLMにDiveチャットがKaTeX/Markdown/Mermaidなどの出力をサポートすることを説明します。この機能は一定のトークンを消費しますが、システムプロンプトなしのプロンプトよりも応答が遅くなる場合があります。一方、LLMの応答の品質が向上する可能性があります"
   },
   "toast": {
     "copiedToClipboard": "クリップボードにコピーしました"

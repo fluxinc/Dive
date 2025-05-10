@@ -1,4 +1,5 @@
-import { InterfaceModelConfig, InterfaceModelConfigMap, verifyModelWithConfig } from "../../../atoms/configState"
+import { useAtom } from "jotai"
+import { InterfaceModelConfig, InterfaceModelConfigMap, modelVerifyListAtom, verifyModelWithConfig } from "../../../atoms/configState"
 import { useRef } from "react"
 
 export interface ModelVerifyDetail {
@@ -7,11 +8,10 @@ export interface ModelVerifyDetail {
   detail?: Record<string, any>
 }
 
-export type ModelVerifyStatus = "verifying" | "abort" | "ignore" | "success" | "unSupportTool" | "unSupportModel" | "unVerified"
+export type ModelVerifyStatus = "verifying" | "abort" | "ignore" | "success" | "unSupportTool" | "unSupportModel" | "unVerified" | "error"
 
 export const useModelVerify = () => {
-  const localListOptions = localStorage.getItem("modelVerify")
-  const allVerifiedList = localListOptions ? JSON.parse(localListOptions) : {}
+  const [allVerifiedList, setAllVerifiedList] = useAtom(modelVerifyListAtom)
   const detail = useRef<ModelVerifyDetail[]>([])
   const pending = useRef<Set<Promise<void>>>(new Set())
   const controllers = useRef<Set<AbortController>>(new Set())
@@ -56,7 +56,7 @@ export const useModelVerify = () => {
           const verifiedList = allVerifiedList[_key as string] ?? {}
           verifiedList[_value.model as string] = verifyResult
           allVerifiedList[_key as string] = verifiedList
-          localStorage.setItem("modelVerify", JSON.stringify(allVerifiedList))
+          setAllVerifiedList({...allVerifiedList})
           const _detail = [...detail.current]
           _detail.find(item => item.name === _value.model)!.detail = verifyResult
           _detail.find(item => item.name === _value.model)!.status = getVerifyStatus(verifyResult)
@@ -64,18 +64,24 @@ export const useModelVerify = () => {
           onUpdate?.(detail.current)
         })
         .catch(error => {
-          if (error.name === 'AbortError') {
-            const _detail = [...detail.current]
-            _detail.find(item => item.name === _value.model)!.status = "abort"
-            detail.current = _detail
-            onUpdate?.(detail.current)
+          const _detail = [...detail.current]
+          const _detailItem = _detail.find(item => item.name === _value.model)!
+          if (error.name === "AbortError") {
+            _detailItem.status = "abort"
+          } else {
+            _detailItem.status = "error"
+            _detailItem.detail = error.message
           }
+          detail.current = _detail
+          onUpdate?.(detail.current)
         })
         .finally(() => {
           controllers.current.delete(controller)
           pending.current.delete(task)
           const newTask = addNewTask()
-          if (newTask) pending.current.add(newTask)
+          if (newTask) {
+            pending.current.add(newTask)
+          }
         })
 
       return task
@@ -125,11 +131,11 @@ const verifyModel = async (modelConfig: InterfaceModelConfig, signal?: AbortSign
 export const getVerifyStatus = (data: any) => {
   if(data === "ignore") {
     return "ignore"
-  }else if(data && data.success && data.supportTools) {
+  }else if(data && data.connecting && data.connecting.success && data.supportTools && data.supportTools.success) {
     return "success"
-  }else if(data && data.success && !data.supportTools) {
+  }else if(data && data.connecting && data.connecting.success && !(data.supportTools && data.supportTools.success)) {
     return "unSupportTool"
-  }else if(data && !data.success) {
+  }else if(data && data.connecting && !data.connecting.success) {
     return "unSupportModel"
   }
 

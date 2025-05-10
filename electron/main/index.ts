@@ -129,11 +129,14 @@ async function createWindow() {
 
 app.whenReady().then(onReady)
 
+app.on("quit", async () => {
+  await cleanup()
+})
+
 app.on("window-all-closed", async () => {
   win = null
 
   if (process.platform !== "darwin" && AppState.isQuitting) {
-    await cleanup()
     app.quit()
   }
 })

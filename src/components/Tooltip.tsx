@@ -1,20 +1,26 @@
-import * as RadixTooltip from '@radix-ui/react-tooltip';
-import { ReactNode, forwardRef } from 'react';
+import * as RadixTooltip from "@radix-ui/react-tooltip"
+import { ReactNode, forwardRef } from "react"
 
 type Props = {
   children: ReactNode,
   content: string | ReactNode
   side?: "top" | "right" | "bottom" | "left"
   type?: "controls"
+  disabled?: boolean
 }
 
 const Tooltip = forwardRef<HTMLButtonElement|null, Props>(({
   children,
   content,
-  side = 'bottom',
-  type = '',
+  side = "bottom",
+  type = "",
+  disabled = false,
   ...rest
 }, ref) => {
+  if(disabled) {
+    return <>{children}</>
+  }
+
   return (
     <RadixTooltip.Provider delayDuration={300}>
       <RadixTooltip.Root>
@@ -31,6 +37,6 @@ const Tooltip = forwardRef<HTMLButtonElement|null, Props>(({
     </RadixTooltip.Provider>
   )
 })
-Tooltip.displayName = 'Tooltip'
+Tooltip.displayName = "Tooltip"
 
 export default Tooltip

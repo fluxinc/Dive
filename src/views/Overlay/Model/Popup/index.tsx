@@ -2,7 +2,7 @@
 import { useAtom } from "jotai"
 import React, { useEffect, useMemo, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { InterfaceModelConfig, MultiModelConfig } from "../../../../atoms/configState"
+import { InterfaceModelConfig, modelVerifyListAtom, MultiModelConfig } from "../../../../atoms/configState"
 import { defaultInterface } from "../../../../atoms/interfaceState"
 import { showToastAtom } from "../../../../atoms/toastState"
 import CheckBox from "../../../../components/CheckBox"
@@ -34,8 +34,7 @@ const ModelPopup = ({
   const [verifyingCnt, setVerifyingCnt] = useState(0)
   const [verifiedCnt, setVerifiedCnt] = useState(0)
   const [showConfirmVerify, setShowConfirmVerify] = useState(false)
-  const localListOptions = localStorage.getItem("modelVerify")
-  const allVerifiedList = localListOptions ? JSON.parse(localListOptions) : {}
+  const [allVerifiedList, setAllVerifiedList] = useAtom(modelVerifyListAtom)
   const { verify, abort } = useModelVerify()
 
   const [showAdvancedSetting, setShowAdvancedSetting] = useState(false);
@@ -47,7 +46,7 @@ const ModelPopup = ({
         } = useModelsProvider()
 
   const multiModelConfig = (multiModelConfigList?.[currentIndex] ?? {}) as MultiModelConfig
-  const currentVerifyList = multiModelConfig ? allVerifiedList[multiModelConfig?.apiKey || multiModelConfig?.baseURL] ?? {} : {}
+  const currentVerifyList = multiModelConfig ? (allVerifiedList ?? {})[multiModelConfig?.apiKey || multiModelConfig?.baseURL] ?? {} : {}
 
   const searchListOptions = useMemo(() => {
     let result = listOptions
@@ -188,8 +187,6 @@ const ModelPopup = ({
       }
 
       // if model is not in current listOptions, remove it from verifiedList
-      const localListOptions = localStorage.getItem("modelVerify")
-      const allVerifiedList = localListOptions ? JSON.parse(localListOptions) : {}
       const verifiedList = allVerifiedList[key] ?? {}
       const cleanedVerifiedList = {} as Record<string, ModelVerifyStatus>
       Object.keys(verifiedList).forEach(modelName => {
@@ -197,10 +194,10 @@ const ModelPopup = ({
           cleanedVerifiedList[modelName] = verifiedList[modelName]
         }
       })
-      localStorage.setItem("modelVerify", JSON.stringify({
+      setAllVerifiedList({
         ...allVerifiedList,
         [key as string]: cleanedVerifiedList
-      }))
+      })
 
       await handleSubmit(data)
     } catch (error) {
@@ -289,7 +286,7 @@ const ModelPopup = ({
     })
     setListOptions(_listOptions)
     allVerifiedList[multiModelConfig?.apiKey || multiModelConfig?.baseURL] = currentVerifyList
-    localStorage.setItem("modelVerify", JSON.stringify(allVerifiedList))
+    setAllVerifiedList({...allVerifiedList})
     setShowConfirmVerify(false)
     if(ifSave){
       await saveModel()
@@ -347,26 +344,42 @@ const ModelPopup = ({
   }
 
   const verifyMenu = (option: ListOption) => {
-    const status = option.verifyStatus ?? "unVerified";
-    const menu = [];
+    const status = option.verifyStatus ?? "unVerified"
+    const menu = []
 
-    // menu.push({
-    //   label: (
-    //     <div className="model-option-verify-menu-item">
-    //       <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-    //         <path fill-rule="evenodd" clip-rule="evenodd" d="M12 6H2C1.44772 6 1 6.44772 1 7C1 7.55228 1.44772 8 2 8H12V6ZM16 8H20C20.5523 8 21 7.55228 21 7C21 6.44772 20.5523 6 20 6H16V8Z" fill="currentColor"/>
-    //         <circle cx="14" cy="7" r="3" stroke="currentColor" stroke-width="2"/>
-    //         <path fill-rule="evenodd" clip-rule="evenodd" d="M10 14H20C20.5523 14 21 14.4477 21 15C21 15.5523 20.5523 16 20 16H10V14ZM6 16H2C1.44772 16 1 15.5523 1 15C1 14.4477 1.44772 14 2 14H6V16Z" fill="currentColor"/>
-    //         <circle cx="8" cy="15" r="3" stroke="currentColor" stroke-width="2"/>
-    //       </svg>
-    //       {t("models.verifyMenu0")}
-    //     </div>
-    //   ),
-    //   onClick: () => {
-    //     setSelectedModel(option.name);
-    //     setShowAdvancedSetting(true);
-    //   },
-    // });
+    menu.push({
+      label: (
+        <div className="model-option-verify-menu-item">
+          <svg
+            width="22"
+            height="22"
+            viewBox="0 0 22 22"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              fillRule="evenodd"
+              clipRule="evenodd"
+              d="M12 6H2C1.44772 6 1 6.44772 1 7C1 7.55228 1.44772 8 2 8H12V6ZM16 8H20C20.5523 8 21 7.55228 21 7C21 6.44772 20.5523 6 20 6H16V8Z"
+              fill="currentColor"
+            />
+            <circle cx="14" cy="7" r="3" stroke="currentColor" strokeWidth="2" />
+            <path
+              fillRule="evenodd"
+              clipRule="evenodd"
+              d="M10 14H20C20.5523 14 21 14.4477 21 15C21 15.5523 20.5523 16 20 16H10V14ZM6 16H2C1.44772 16 1 15.5523 1 15C1 14.4477 1.44772 14 2 14H6V16Z"
+              fill="currentColor"
+            />
+            <circle cx="8" cy="15" r="3" stroke="currentColor" strokeWidth="2" />
+          </svg>
+          {t("models.verifyMenu0")}
+        </div>
+      ),
+      onClick: () => {
+        setSelectedModel(option.name)
+        setShowAdvancedSetting(true)
+      },
+    })
 
     // verify model
     if(status !== "success"){
@@ -491,10 +504,13 @@ const ModelPopup = ({
       {showAdvancedSetting && (
         <AdvancedSettingPopup
           modelName={selectedModel}
-          isStreamingMode_={false}
           onClose={() => {
-            setShowAdvancedSetting(false);
-            setSelectedModel("");
+            setShowAdvancedSetting(false)
+            setSelectedModel("")
+          }}
+          onSave={() => {
+            setShowAdvancedSetting(false)
+            setSelectedModel("")
           }}
         />
       )}

@@ -1,9 +1,33 @@
-import { getVerifyStatus } from './../views/Overlay/Model/ModelVerify'
+import { getVerifyStatus } from "../views/Overlay/Model/ModelVerify"
 import { atom } from "jotai"
+import { atomWithStorage } from "jotai/utils"
 import { EMPTY_PROVIDER, InterfaceProvider, ModelProvider } from "./interfaceState"
 import { getModelPrefix } from "../util"
 import { transformModelProvider } from "../helper/config"
-import { ignoreFieldsForModel } from '../constants'
+import { ignoreFieldsForModel } from "../constants"
+
+
+export type OldVerifyStatus = {
+  success: boolean
+  connectingSuccess: boolean
+  supportTools: boolean
+  connectingResult: string | null
+  supportToolsResult: string | null
+}
+
+export type NewVerifyStatus = {
+  success: boolean
+  connecting: {
+    success: boolean
+    final_state: string
+    error_msg: string | null
+  }
+  supportTools: {
+    success: boolean
+    final_state: string
+    error_msg: string | null
+  }
+}
 
 export type ProviderRequired = {
   apiKey: string
@@ -26,11 +50,14 @@ export type ModelConfig = ProviderRequired & ModelParameter & {
   modelProvider: ModelProvider
   configuration: Partial<ProviderRequired> & ModelParameter
   active: boolean
+  enableTools?: boolean
 }
 
 export type InterfaceModelConfig = Omit<ModelConfig, "modelProvider"> & Partial<ModelParameter> & Partial<BedrockCredentials> & {
-  modelProvider: InterfaceProvider
-}
+  modelProvider: InterfaceProvider;
+    checked?: boolean;
+    name?: string;
+  };
 
 export type ModelConfigMap = Record<string, ModelConfig>
 export type InterfaceModelConfigMap = Record<string, InterfaceModelConfig>
@@ -38,6 +65,7 @@ export type InterfaceModelConfigMap = Record<string, InterfaceModelConfig>
 export type RawModelConfig = {
   activeProvider: string
   configs: ModelConfigMap
+  disableDiveSystemPrompt: boolean
 }
 
 export type MultiModelConfig = ProviderRequired & ModelParameter & Partial<BedrockCredentials> & {
@@ -45,6 +73,9 @@ export type MultiModelConfig = ProviderRequired & ModelParameter & Partial<Bedro
   active: boolean
   checked: boolean
   models: string[]
+  parameters: {
+    [key: string]: any
+  }
 }
 
 export type MCPServerConfig ={
@@ -59,7 +90,8 @@ export type MCPServerConfig ={
 
 export const configAtom = atom<RawModelConfig>({
   activeProvider: "",
-  configs: {}
+  configs: {},
+  disableDiveSystemPrompt: false
 })
 
 export const updateConfigWithProviderAtom = atom(
@@ -78,21 +110,26 @@ export const updateConfigWithProviderAtom = atom(
 export const activeConfigAtom = atom<ModelConfig | null>(
   (get) => {
     const config = get(configAtom)
-    return !config ? null : config.configs[config.activeProvider] || null
+    const activeProvider = get(activeProviderAtom)
+    if(!config || !activeProvider || activeProvider === EMPTY_PROVIDER || !config.configs[activeProvider]){
+      return null
+    }
+
+    return config.configs[activeProvider]
   }
 )
 
 export const activeConfigIdAtom = atom<string>(
   (get) => {
     const config = get(configAtom)
-    return !config ? "" : config.activeProvider
+    const activeProvider = get(activeProviderAtom)
+    return !config ? "" : activeProvider
   }
 )
 
 export const enabledConfigsAtom = atom<ModelConfigMap>(
   (get) => {
-    const localListOptions = localStorage.getItem("modelVerify")
-    const allVerifiedList = localListOptions ? JSON.parse(localListOptions) : {}
+    const allVerifiedList = get(modelVerifyListAtom)
     const configDict = get(configDictAtom)
     return Object.keys(configDict)
       .reduce((acc, key) => {
@@ -100,7 +137,7 @@ export const enabledConfigsAtom = atom<ModelConfigMap>(
         const verifiedConfig = allVerifiedList[config.apiKey || config.baseURL as string]
         if(config.active
           && config.model
-          && (!verifiedConfig || !verifiedConfig[config.model as string] || verifiedConfig[config.model as string].success || verifiedConfig[config.model as string] === "ignore")
+          && (!verifiedConfig || !verifiedConfig[config.model as string] || verifiedConfig[config.model as string].connecting?.success || verifiedConfig[config.model as string] === "ignore")
         ) {
           acc[key] = config
         }
@@ -130,6 +167,8 @@ export const enabledModelsIdsAtom = atom<{key: string, name: string, provider: s
 
 export const configDictAtom = atom<ModelConfigMap>((get) => get(configAtom).configs)
 
+export const modelVerifyListAtom = atomWithStorage<Record<string, any>>("modelVerify", {})
+
 export const isConfigNotInitializedAtom = atom(
   (get) => {
     const config = get(configAtom)
@@ -140,30 +179,53 @@ export const isConfigNotInitializedAtom = atom(
 export const isConfigActiveAtom = atom(
   (get) => {
     const config = get(configAtom)
-    return config !== null && config.activeProvider !== EMPTY_PROVIDER
+    const activeProvider = get(activeProviderAtom)
+
+    return config !== null && activeProvider !== EMPTY_PROVIDER
   }
 )
 
 export const activeProviderAtom = atom<string>(
   (get) => {
     const config = get(configAtom)
+    const allVerifiedList = get(modelVerifyListAtom)
+    if(!config){
+      return EMPTY_PROVIDER
+    }
+
+    if(!config.configs[config.activeProvider]?.active){
+      return EMPTY_PROVIDER
+    }
+
+    const key = config.configs[config.activeProvider]?.apiKey || config.configs[config.activeProvider]?.baseURL
+    const verifiedStatus = allVerifiedList[key as string]
+    const activeModel = config.configs[config.activeProvider]?.model as string || ""
+    if(!activeModel){
+      return EMPTY_PROVIDER
+    }
+
+    const verifiedModel = verifiedStatus?.[activeModel]
+    if(verifiedModel && typeof verifiedModel === "object" && "connecting" in verifiedModel && !verifiedModel.connecting.success) {
+      return EMPTY_PROVIDER
+    }
+
     return config?.activeProvider || EMPTY_PROVIDER
   }
 )
 
 export const currentModelSupportToolsAtom = atom<boolean>(
   (get) => {
-    const localListOptions = localStorage.getItem("modelVerify")
-    const allVerifiedList = localListOptions ? JSON.parse(localListOptions) : {}
+    const allVerifiedList = get(modelVerifyListAtom)
     const activeConfig = get(activeConfigAtom)
+    const activeModel = activeConfig?.model as string
     const verifiedConfig = allVerifiedList[activeConfig?.apiKey || activeConfig?.baseURL as string]
     // Can only check for tool support when the model is verified,
     // if the model is not verified, consider it as support tools
     return !verifiedConfig
             || !activeConfig
-            || !verifiedConfig[activeConfig.model as string]
-            || verifiedConfig[activeConfig.model as string].supportTools
-            || verifiedConfig[activeConfig.model as string] === "ignore"
+            || !verifiedConfig[activeModel]
+            || (verifiedConfig[activeModel].supportTools && verifiedConfig[activeModel].supportTools.success)
+            || verifiedConfig[activeModel] === "ignore"
   }
 )
 
@@ -229,8 +291,9 @@ export const writeRawConfigAtom = atom(
   async (get, set, params: {
     providerConfigs: InterfaceModelConfigMap
     activeProvider?: InterfaceProvider
+    disableDiveSystemPrompt?: boolean
   }) => {
-    const { providerConfigs, activeProvider } = params
+    const { providerConfigs, activeProvider, disableDiveSystemPrompt } = params
 
     const configs = Object.keys(providerConfigs).reduce((acc, key) => {
       const config = providerConfigs[key] as any
@@ -268,10 +331,14 @@ export const writeRawConfigAtom = atom(
       return acc
     }, {} as ModelConfigMap)
 
-    const localListOptions = localStorage.getItem("modelVerify")
-    const allVerifiedList = localListOptions ? JSON.parse(localListOptions) : {}
+    const allVerifiedList = get(modelVerifyListAtom)
     const activeConfig = configs[activeProvider as string]
     const verifiedModel = allVerifiedList[activeConfig?.apiKey ?? activeConfig?.baseURL]?.[activeConfig.model ?? ""]
+    const ifUnSupportTools = getVerifyStatus(verifiedModel) === "unSupportTool" || getVerifyStatus(verifiedModel) === "unSupportModel"
+    const enableTools = ifUnSupportTools ? ("enableTools" in activeConfig ? activeConfig.enableTools : true) : true
+
+    const ifConfigActive = activeProvider && configs[activeProvider as string]?.active
+    const provider = ifConfigActive ? (activeProvider ?? get(activeProviderAtom)) : EMPTY_PROVIDER
 
     try {
       const response = await fetch("/api/config/model/replaceAll", {
@@ -281,8 +348,9 @@ export const writeRawConfigAtom = atom(
         },
         body: JSON.stringify({
           configs,
-          enableTools: getVerifyStatus(verifiedModel) !== "unSupportTool" && getVerifyStatus(verifiedModel) !== "unSupportModel",
-          activeProvider: activeProvider ?? get(activeProviderAtom),
+          enableTools,
+          activeProvider: provider,
+          disableDiveSystemPrompt: disableDiveSystemPrompt ?? get(disableDiveSystemPromptAtom)
         }),
       })
 
@@ -291,7 +359,7 @@ export const writeRawConfigAtom = atom(
         set(configAtom, {
           ...get(configAtom),
           configs,
-          activeProvider: activeProvider ?? get(activeProviderAtom)
+          activeProvider: provider
         })
       }
       return data
@@ -299,6 +367,34 @@ export const writeRawConfigAtom = atom(
       console.error("Failed to save config:", error)
       throw error
     }
+  }
+)
+
+export const disableDiveSystemPromptAtom = atom<boolean>(
+  (get) => {
+    const config = get(configAtom)
+    if("disableDiveSystemPrompt" in config) {
+      return config.disableDiveSystemPrompt ?? false
+    }
+    return false
+  }
+)
+
+export const updateDisableDiveSystemPromptAtom = atom(
+  null,
+  (get, set, params: {
+    value: boolean
+  }) => {
+    const { value } = params
+    set(configAtom, {
+      ...get(configAtom),
+      disableDiveSystemPrompt: value
+    })
+    set(writeRawConfigAtom, {
+      providerConfigs: get(configDictAtom) as unknown as InterfaceModelConfigMap,
+      activeProvider: get(activeProviderAtom) as InterfaceProvider,
+      disableDiveSystemPrompt: value
+    })
   }
 )
 
@@ -379,6 +475,7 @@ export const writeEmptyConfigAtom = atom(
       configs: {},
       enableTools: true,
       activeProvider: EMPTY_PROVIDER,
+      disableDiveSystemPrompt: false
     }
 
     await fetch("/api/config/model/replaceAll", {

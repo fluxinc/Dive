@@ -360,10 +360,6 @@
       justify-content: space-between;
       align-items: center;
 
-      &:hover {
-        background: var(--bg-op-dark-extremeweak);
-      }
-
       .tool-header-content {
         display: flex;
         align-items: center;
@@ -384,10 +380,25 @@
         }
       }
 
+      .tool-status-light {
+        display: flex;
+        align-items: center;
+        width: 16px;
+        height: 16px;
+
+        svg {
+          opacity: 1;
+          width: 16px;
+          height: 16px;
+        }
+      }
+
       .tool-disabled-label {
         color: var(--text-weak);
         font-size: 14px;
         margin-left: 12px;
+        display: flex;
+        align-items: center;
       }
 
       .tool-toggle {
@@ -422,7 +433,13 @@
         }
       }
 
+      &:has(.tool-edit-menu:hover) {
+        background: transparent;
+      }
+
       &:hover {
+        background: var(--bg-op-dark-extremeweak);
+
         .tool-edit-menu {
           opacity: 1;
         }
@@ -441,24 +458,38 @@
         margin-bottom: 16px;
         color: var(--text-weak);
       }
-    }
 
-    &.expanded {
-      .tool-toggle {
-        transform: rotate(180deg);
-      }
+      .sub-tool-error {
+        color: var(--text-error);
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 12px;
+        border-radius: 6px;
+        background: var(--bg-error-light);
+        max-height: 125px;
+        overflow-y: auto;
+        box-shadow: 0 1px 3px var(--shadow-modal-light);
 
-      .tool-content {
-        display: block;
-      }
-    }
+        @include scrollbar;
 
-    &.disabled {
-      .tool-header {
-        cursor: default;
+        svg {
+          width: 18px;
+          height: 18px;
+        }
 
-        &:hover {
-          background: transparent;
+        .sub-tool-error-text {
+          flex: 1;
+          font-size: 14px;
+
+          .sub-tool-error-text-title {
+            font-weight: 700;
+            margin-bottom: 4px;
+          }
+
+          .sub-tool-error-text-content {
+            color: var(--text-weak);
+          }
         }
       }
     }
@@ -480,6 +511,36 @@
         .sub-tool-description {
           font-size: 14px;
           color: var(--text-weak);
+        }
+      }
+    }
+
+    &.expanded {
+      .tool-toggle {
+        transform: rotate(180deg);
+      }
+
+      .tool-content {
+        display: block;
+      }
+    }
+
+    &.disabled {
+      .tool-header {
+        cursor: default;
+      }
+
+      &.enabled {
+        .tool-disabled-label {
+          color: var(--text-error);
+        }
+
+        .switch-slider {
+          background: var(--bg-error);
+        }
+
+        .switch-slider:before {
+          border-color: var(--border-error);
         }
       }
     }

@@ -1,4 +1,4 @@
-import { useAtom, useSetAtom } from "jotai"
+import { useAtom, useAtomValue, useSetAtom } from "jotai"
 import { useTranslation } from "react-i18next"
 import Select from "../../components/Select"
 import { closeOverlayAtom } from "../../atoms/layerState"
@@ -10,9 +10,9 @@ import { getAutoDownload, setAutoDownload as _setAutoDownload } from "../../upda
 import PopupConfirm from "../../components/PopupConfirm"
 import { showToastAtom } from "../../atoms/toastState"
 import { historiesAtom, loadHistoriesAtom } from "../../atoms/historyState"
-import { useAtomValue } from "jotai"
 import { useNavigate } from "react-router-dom"
 import { currentChatIdAtom } from "../../atoms/chatState"
+import { disableDiveSystemPromptAtom, updateDisableDiveSystemPromptAtom } from "../../atoms/configState"
 
 const System = () => {
   const { t, i18n } = useTranslation()
@@ -28,6 +28,8 @@ const System = () => {
   const loadHistories = useSetAtom(loadHistoriesAtom)
   const navigate = useNavigate()
   const setCurrentChatId = useSetAtom(currentChatIdAtom)
+  const disableDiveSystemPrompt = useAtomValue(disableDiveSystemPromptAtom)
+  const [, updateDisableDiveSystemPrompt] = useAtom(updateDisableDiveSystemPromptAtom)
 
   useEffect(() => {
     import("../../platform").then(({ platform }) => {
@@ -45,6 +47,7 @@ const System = () => {
   }
 
   const languageOptions = [
+    { label: t("system.languageDefault"), value: "default" },
     { label: "繁體中文", value: "zh-TW" },
     { label: "简体中文", value: "zh-CN" },
     { label: "English", value: "en" },
@@ -62,8 +65,11 @@ const System = () => {
 
   const handleLanguageChange = async (value: string) => {
     setLanguage(value)
-    await i18n.changeLanguage(value)
-    setDefaultInstructions()
+    await i18n.changeLanguage(value === "default" ? navigator.language : value)
+
+    if (value !== "default") {
+      setDefaultInstructions()
+    }
   }
 
   const setDefaultInstructions = async () => {
@@ -166,6 +172,10 @@ const System = () => {
     }
   }
 
+  const handleDefaultSystemPromptChange = async (value: boolean) => {
+    await updateDisableDiveSystemPrompt({ value })
+  }
+
   return (
     <div className="system-page overlay-page">
       <button
@@ -184,21 +194,6 @@ const System = () => {
           </div>
         </div>
         <div className="system-content">
-
-          {/* language */}
-          <div className="system-list-section">
-            <div className="system-list-content">
-              <span className="system-list-name">{t("system.language")}:</span>
-            </div>
-            <div className="system-list-switch-container">
-              <Select
-                options={languageOptions}
-                value={language}
-                onSelect={(value) => handleLanguageChange(value)}
-                align="end"
-              />
-            </div>
-          </div>
 
           {/* theme */}
           <div className="system-list-section">
@@ -255,6 +250,7 @@ const System = () => {
                   onChange={e => handleMinimalToTrayChange(e.target.checked)}
                 />
               </div>
+              <span className="system-list-description">{t("system.minimalToTrayDescription")}</span>
             </div>
           )}
 
@@ -276,6 +272,72 @@ const System = () => {
               </button>
             </div>
             </div>
+          } />
+          {/* auto launch */}
+          {isElectron && (
+            <div className="system-list-section">
+              <div className="system-list-content">
+                <span className="system-list-name">{t("system.autoLaunch")}</span>
+                <div className="system-list-switch-container">
+                <Switch
+                  checked={autoLaunch}
+                  onChange={e => handleAutoLaunchChange(e.target.checked)}
+                />
+              </div>
+            </div>
+            <span className="system-list-description">{t("system.autoLaunchDescription")}</span>
+          </div>
+          )}
+
+          {/* auto download */}
+          {isElectron && (
+            <div className="system-list-section">
+              <div className="system-list-content">
+                <span className="system-list-name">{t("system.autoDownload")}</span>
+              <div className="system-list-switch-container">
+                <Switch
+                  checked={autoDownload}
+                  onChange={(e) => {
+                    setAutoDownload(e.target.checked)
+                    _setAutoDownload(e.target.checked)
+                  }}
+                />
+              </div>
+            </div>
+            <span className="system-list-description">{t("system.autoDownloadDescription")}</span>
+          </div>
+          )}
+
+          {/* language */}
+          <div className="system-list-section">
+            <div className="system-list-content">
+              <span className="system-list-name">{t("system.language")}</span>
+              <div className="system-list-switch-container">
+                <Select
+                  options={languageOptions}
+                  value={language}
+                  onSelect={(value) => handleLanguageChange(value)}
+                  align="end"
+                />
+              </div>
+            </div>
+            <span className="system-list-description">{t("system.languageDescription")}</span>
+          </div>
+
+          {/* default System Prompt */}
+          <DevModeOnlyComponent component={
+            <div className="system-list-section">
+              <div className="system-list-content">
+                <span className="system-list-name">{t("system.defaultSystemPrompt")}</span>
+                <div className="system-list-switch-container">
+                <Switch
+                  checked={!disableDiveSystemPrompt}
+                  onChange={e => handleDefaultSystemPromptChange(!e.target.checked)}
+                />
+              </div>
+            </div>
+            <span className="system-list-description">{t("system.defaultSystemPromptDescription")}</span>
+          </div>
           } />
         </div>
       </div>

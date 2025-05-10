@@ -108,10 +108,11 @@ jobs:
           APPLEIDPASS: ${{ secrets.APPLEIDPASS }}
           APPLETEAMID: ${{ secrets.APPLETEAMID }}
         run: |
-          npm run package:darwin-dmg
+          npm run package:darwin
           ls -al release/${{ env.VERSION }}
-          echo "Moving dmg file to output directory"
+          echo "Moving dmg, zip file to output directory"
           mv release/${{ env.VERSION }}/*.dmg output/
+          mv release/${{ env.VERSION }}/*.zip output/
           mv release/${{ env.VERSION }}/latest-mac.yml output/
 
       - name: Build Linux
