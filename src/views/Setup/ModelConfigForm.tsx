@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from "react"
 import { useTranslation } from "react-i18next"
 import { FieldDefinition, InterfaceProvider, PROVIDER_LABELS, PROVIDERS } from "../../atoms/interfaceState"
-import { InterfaceModelConfig, MCPServerConfig, prepareModelConfig, verifyModelWithConfig, ModelConfig, saveFirstConfigAtom, writeEmptyConfigAtom, writeMCPConfigAtom } from "../../atoms/configState"
-import { fieldsForMCPServer, ignoreFieldsForModel } from "../../constants"
+import { InterfaceModelConfig , ModelConfig, saveFirstConfigAtom, writeEmptyConfigAtom } from "../../atoms/configState"
+import { ignoreFieldsForModel } from "../../constants"
 import { useSetAtom } from "jotai"
 import { loadConfigAtom } from "../../atoms/configState"
 import useDebounce from "../../hooks/useDebounce"
@@ -39,7 +39,6 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
   const loadConfig = useSetAtom(loadConfigAtom)
   const saveConfig = useSetAtom(saveFirstConfigAtom)
   const writeEmptyConfig = useSetAtom(writeEmptyConfigAtom)
-  const writeMCPConfig = useSetAtom(writeMCPConfigAtom)
   const showToast = useSetAtom(showToastAtom)
   
   const [fetchListOptions, cancelFetch] = useDebounce(async (key: string, field: FieldDefinition, deps: Record<string, string>) => {
@@ -159,54 +158,8 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
       }
     }, {} as InterfaceModelConfig)
 
-    // Filter fields for MCP server config
-    const mcpConfig = Object.keys(_config).reduce((acc, key) => {
-      if (fieldsForMCPServer.includes(key)) {
-        return {
-          ...acc,
-          [key]: _config[key as keyof ModelConfig]
-        }
-      }
-
-      return acc
-    }, {} as {
-      transport: "command" | "sse",
-      url?: string,
-      serverFileLocation?: string,
-    })
-
-    // Transform the MCP config to the correct format to be written to the config file
-    const transformedMCPConfig: MCPServerConfig = {
-      transport: mcpConfig.transport,
-    }
-
-    if (mcpConfig.transport === "command") {
-      const fileEndingMatch = mcpConfig.serverFileLocation?.match(/\.[^.]+$/)
-      transformedMCPConfig.command = "node"
-      transformedMCPConfig.enabled = true
-      const serverFileLocation = mcpConfig.serverFileLocation as string
-      if (fileEndingMatch) {
-        // If the serverFileLocation is a file path, we need to get the directory
-        transformedMCPConfig.cwd = serverFileLocation.split("/").slice(0, -1).join("/")
-        transformedMCPConfig.args = [serverFileLocation]
-      } else {
-        // Otherwise, the serverFileLocation is a directory and assume the server file is index.js
-        transformedMCPConfig.cwd = mcpConfig.serverFileLocation
-        if (serverFileLocation.endsWith("/")) {
-          transformedMCPConfig.args = [serverFileLocation + "index.js"]
-        } else {
-          transformedMCPConfig.args = [serverFileLocation + "/index.js"]
-        }
-      }
-      transformedMCPConfig.args.push("--log")
-    }
-    else {
-      transformedMCPConfig.url = mcpConfig.url
-    }
-
     return {
-      modelConfig,
-      mcpConfig: transformedMCPConfig
+      modelConfig
     }
   }, [])
 
@@ -296,13 +249,12 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
     if (!validateForm())
       return
 
-    const { modelConfig, mcpConfig } = prepareModelConfig(formData, provider)
+    const { modelConfig } = prepareModelConfig(formData, provider)
 
     try {
       setIsSubmitting(true)
       const modelData = await saveConfig({ data: modelConfig, provider })
-      const mcpData = await writeMCPConfig("rag_mcp", mcpConfig)
-      await onSubmit({...modelData, ...mcpData})
+      await onSubmit({...modelData})
       loadConfig()
     } finally {
       setIsSubmitting(false)
