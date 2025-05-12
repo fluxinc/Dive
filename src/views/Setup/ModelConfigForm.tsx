@@ -212,6 +212,7 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
 
   const verifyModel = async () => {
     try {
+      setIsVerified(false)
       setIsVerifying(true)
       const modelProvider = transformModelProvider(provider)
       const configuration = {...formData} as Partial<Pick<ModelConfig, "configuration">> & Omit<ModelConfig, "configuration">
@@ -246,9 +247,9 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
       })
 
       const data = await response.json()
-      if (data.success) {
-        setIsVerified(true)
+      if (data.success ) {
         if(data.connecting && data.connecting.success && data.supportTools && data.supportTools.success) {
+          setIsVerified(true)
           setIsVerifyingNoTool(false)
           showToast({
             message: t("setup.verifySuccess"),
@@ -260,6 +261,12 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
           showToast({
             message: t("setup.verifySuccessNoTool"),
             type: "success",
+            duration: 5000
+          })
+        } else {
+          showToast({
+            message: t("setup.verifyFailed"),
+            type: "error",
             duration: 5000
           })
         }
