@@ -235,7 +235,9 @@ export const loadConfigAtom = atom(
     try {
       const response = await fetch("/api/config/model")
       const data = await response.json()
-      set(configAtom, data.config)
+      if (data.config) {
+        set(configAtom, data.config)
+      }
       return data.config
     } catch (error) {
       console.warn("Failed to load config:", error)
