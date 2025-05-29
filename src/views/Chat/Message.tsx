@@ -292,6 +292,11 @@ const Message = ({ messageId, text, isSent, files, isError, isLoading, sources, 
       <div className={`message ${isSent ? "sent" : "received"} ${isError ? "error" : ""}`}>
         {formattedText}
         {files && files.length > 0 && <FilePreview files={typeof files === "string" ? JSON.parse(files) : files} />}
+        {!isSent && sources && sources.length > 0 && (
+          <div className="message-sources">
+            {sourcePanel}
+          </div>
+        )}
         {isLoading && (
           <div className="loading-dots">
             <span></span>
