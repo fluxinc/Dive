@@ -14,7 +14,7 @@
     "url": "https://github.com/fluxinc/Dive"
   },
   "scripts": {
-    "dev": "node scripts/apply-config.js && vite --config vite.config.ts",
+    "dev": "set BACKEND_URL=http://localhost:61990 && node scripts/apply-config.js && vite --config vite.config.ts",
     "watch": "nodemon --watch config/theme.config.json --exec 'npm run dev'",
     "watch:electron": "nodemon --watch config/theme.config.json --exec 'npm run dev:electron'",
     "dev:electron": "node scripts/apply-config.js && vite --config vite.config.electron.ts",

@@ -8,6 +8,7 @@
       "text-inverted-weak": "rgba(255, 255, 255, 0.5)",
       "text-link": "#e0d0e3",
       "text-link-hover": "#ffffff",
+      "border": "#ffffff",
       "border-warn": "#b30000"
     },
     "light": {
@@ -17,6 +18,7 @@
       "text-inverted-weak": "rgba(0, 0, 0, 0.5)",
       "text-link": "#894167",
       "text-link-hover": "#632d4a",
+      "border": "#d1d5db",
       "border-warn": "#ff0000"
     }
   },
