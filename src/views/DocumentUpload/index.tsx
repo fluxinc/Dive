@@ -8,8 +8,8 @@ interface UploadedFile extends File {
   id: string;
   progress: number;
   status: "pending" | "uploading" | "completed" | "error";
+  response?: MorphikDocument;
   error?: string;
-  response?: any;
 }
 
 interface MorphikDocument {
@@ -22,8 +22,8 @@ interface MorphikDocument {
 }
 
 interface BatchUploadResponse {
-  documents: MorphikDocument[];
-  errors: any[];
+  message: string;
+  failed_documents: MorphikDocument[];
 }
 
 interface CrawledUrl {
@@ -300,9 +300,9 @@ const DocumentUpload: React.FC = () => {
       })
       return
     }
-
+    
     setIsUploading(true)
-
+    
     try {
       if (filesToUpload.length === 1) {
         // Single file upload
@@ -310,16 +310,15 @@ const DocumentUpload: React.FC = () => {
         updateFileStatus(file.id, {
           status: "uploading",
           progress: 50,
-          error: undefined,
         })
-
+        
         const response = await uploadSingleFile(file)
         updateFileStatus(file.id, {
           status: "completed",
           progress: 100,
           response,
         })
-
+        
         showToast({
           message: `File "${file.name}" uploaded successfully`,
           type: "success",
@@ -330,41 +329,34 @@ const DocumentUpload: React.FC = () => {
           updateFileStatus(file.id, {
             status: "uploading",
             progress: 50,
-            error: undefined,
           })
         })
-
-        const response = await uploadBatchFiles(filesToUpload)
-
+        const response: BatchUploadResponse = await uploadBatchFiles(filesToUpload)
+        console.log(response)
         // Update file statuses based on response
-        response.documents.forEach((doc, index) => {
-          const file = filesToUpload[index]
-          if (file) {
+        filesToUpload.forEach((file) => {
+          const failedDoc = response.failed_documents.find(
+            (doc) => doc.filename === file.name
+          );
+          if (failedDoc) {
+            updateFileStatus(file.id, {
+              status: "error",
+              progress: 100,
+              error: "Upload failed.",
+              response: failedDoc,
+            });
+          } else {
             updateFileStatus(file.id, {
               status: "completed",
               progress: 100,
-              response: doc,
-            })
+            });
           }
-        })
-
-        // Handle any errors
-        if (response.errors && response.errors.length > 0) {
-          response.errors.forEach((error, index) => {
-            const file = filesToUpload[index]
-            if (file && error) {
-              updateFileStatus(file.id, {
-                status: "error",
-                error: JSON.stringify(error),
-              })
-            }
-          })
-        }
+        });
 
         showToast({
-          message: `Batch upload completed: ${response.documents.length} files uploaded`,
-          type: "success",
-        })
+          message: response.message,
+          type: response.failed_documents.length > 0 ? "warning" : "success",
+        });
       }
     } catch (error) {
       console.error("Upload error:", error)
@@ -968,7 +960,7 @@ const DocumentUpload: React.FC = () => {
                     <span className="file-icon">{getFileIcon(file.name)}</span>
                     {file.name}
                 </div>
-                {file.error && (
+                {file.status === "error" && (
                   <div className="file-error">{file.error}</div>
                 )}
                 <span className="file-size">
