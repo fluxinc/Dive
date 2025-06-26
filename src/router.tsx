@@ -3,7 +3,8 @@ import Layout from "./views/Layout"
 import Chat from "./views/Chat"
 import Welcome from "./views/Welcome"
 import Setup from "./views/Setup"
-import DocumentUpload from "./views/DocumentUpload"
+import DocumentStatus from "./views/DocumentStatus"
+import DocumentUpload from "./views/DocumentUpload/index"
 
 export const router = createHashRouter([
   {
@@ -27,8 +28,12 @@ export const router = createHashRouter([
         element: <Setup />
       },
       {
-        path: "upload",
+        path: "documents/upload",
         element: <DocumentUpload />
+      },
+      {
+        path: "documents/status",
+        element: <DocumentStatus />
       },
       // Navigate to the root page if the route is not found - stops 404 errors
       {
