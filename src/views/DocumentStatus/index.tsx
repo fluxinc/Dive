@@ -1,75 +1,91 @@
-import React, { useState, useEffect } from "react";
-import { useTranslation } from "react-i18next";
-import DocumentList, { Document } from "../../components/DocumentList";
-import "../../styles/pages/_DocumentUpload.scss"; // Reuse styles for consistency
+import React, { useState, useEffect, useCallback } from "react"
+import { useTranslation } from "react-i18next"
+import { useSetAtom } from "jotai"
+import { showToastAtom } from "../../atoms/toastState"
+import DocumentList, { Document, TabStatus } from "./DocumentList"
+import "../../styles/pages/_DocumentUpload.scss" // Reuse styles for consistency
 
 const DocumentStatus: React.FC = () => {
-  const { t } = useTranslation();
-  const [documents, setDocuments] = useState<Document[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { t } = useTranslation()
+  const [documents, setDocuments] = useState<Document[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [deletingIds, setDeletingIds] = useState<string[]>([])
+  const [activeTab, setActiveTab] = useState<TabStatus>("completed")
+  const showToast = useSetAtom(showToastAtom)
 
-  const fetchDocuments = async () => {
-    setIsLoading(true);
-    setError(null);
+  const fetchDocuments = useCallback(async (status: TabStatus) => {
+    setIsLoading(true)
+    setError(null)
     try {
-      const response = await fetch("/api/documents?limit=100"); // Fetch latest 100, add pagination later
+      const response = await fetch(`/api/documents?status=${status}`) // Fetch documents for the active tab
       if (!response.ok) {
-        throw new Error("Failed to fetch documents");
+        throw new Error("Failed to fetch documents")
       }
-      const data = await response.json();
-      setDocuments(data);
+      const data = await response.json()
+      setDocuments(data)
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An unknown error occurred");
+      setError(err instanceof Error ? err.message : "An unknown error occurred")
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }, [])
+
+  const handleDelete = async (external_id: string) => {
+    setDeletingIds((prev) => [...prev, external_id])
+    try {
+      const response = await fetch(`/api/documents/${external_id}`, {
+        method: "DELETE",
+      })
+      if (!response.ok) {
+        throw new Error("Failed to delete document")
+      }
+      // Refetch documents for the current tab to reflect the deletion
+      fetchDocuments(activeTab)
+    } catch (err) {
+      showToast({
+        message: err instanceof Error ? err.message : "An unknown error occurred",
+        type: "error",
+      })
+    } finally {
+      setDeletingIds((prev) => prev.filter(id => id !== external_id))
+    }
+  }
 
   useEffect(() => {
-    fetchDocuments();
-    // Optional: set up polling to refresh the document statuses
-    const interval = setInterval(fetchDocuments, 10000); // every 10 seconds
-    return () => clearInterval(interval);
-  }, []);
+    fetchDocuments(activeTab)
+  }, [activeTab, fetchDocuments])
 
-  const categorizedDocuments = {
-    processing: documents.filter(d => d.system_metadata.status === 'processing'),
-    failed: documents.filter(d => d.system_metadata.status === 'failed'),
-    completed: documents.filter(d => d.system_metadata.status === 'completed'),
-  };
+  // useEffect(() => {
+  //   fetchDocuments();
+  //   // Optional: set up polling to refresh the document statuses
+  //   const interval = setInterval(fetchDocuments, 10000); // every 10 seconds
+  //   return () => clearInterval(interval);
+  // }, []);
 
   return (
-    <div className="main-container document-upload-page">
+    <div className="main-container document-status-page">
       <h1>{t("documentStatus.title", "Document Status")}</h1>
       {isLoading && <p>Loading documents...</p>}
       {error && <p className="error-message">{error}</p>}
       
       <div className="document-status-sections">
-        {categorizedDocuments.processing.length > 0 && (
-          <section>
-            <h2>Processing</h2>
-            <DocumentList documents={categorizedDocuments.processing} />
-          </section>
-        )}
-        {categorizedDocuments.failed.length > 0 && (
-          <section>
-            <h2>Failed</h2>
-            <DocumentList documents={categorizedDocuments.failed} />
-          </section>
-        )}
-        {categorizedDocuments.completed.length > 0 && (
-          <section>
-            <h2>Completed</h2>
-            <DocumentList documents={categorizedDocuments.completed} />
-          </section>
+        {!isLoading && documents.length > 0 && (
+          <DocumentList 
+            documents={documents} 
+            handleDelete={handleDelete} 
+            deletingIds={deletingIds}
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            isLoading={isLoading}
+          />
         )}
         {!isLoading && documents.length === 0 && (
             <p>No documents found.</p>
         )}
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default DocumentStatus;
+export default DocumentStatus
