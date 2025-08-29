@@ -1,4 +1,4 @@
 [submodule "mcp-host"]
 	path = mcp-host
 	url = https://github.com/fluxinc/dive-mcp-host.git
-	branch = main
+	branch = live

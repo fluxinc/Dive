@@ -72,12 +72,19 @@ export const platform = {
     } else {
       console.log("Mock openaiModelList called")
       // Check if we have a cached model list for this API key
-      const storageKey = `${STORAGE_KEYS.MODEL_LIST_OPENAI}_${apiKey.substring(0, 8)}`
+      const storageKey = `${STORAGE_KEYS.MODEL_LIST_OPENAI}_${apiKey.substring(8, 16)}`
       const cachedList = getStorageItem(storageKey, null)
       if (cachedList) {
         return cachedList
       }
-      const result = { results: ["gpt-3.5-turbo", "gpt-4"], error: null }
+      const url = "https://raw.githubusercontent.com/Intelligent-Intern/openai-model-capabilities/refs/heads/main/latest.json" // A list of openai models and their capabilities, because OpenAI doesn't offer that endpoint
+      const response = await fetch(url, {
+        headers: {
+          "Content-Type": "application/json"
+        }
+      })
+      const data = await response.json()
+      const result = { results: data.data.filter((model: any) => model.supported_methods.includes("chat.completions") || model.supported_methods.includes("responses")).map((model: any) => model.id), error: null }
       setStorageItem(storageKey, result)
       return result
     }
