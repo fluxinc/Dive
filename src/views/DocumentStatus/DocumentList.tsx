@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useState } from "react"
 import "../../styles/pages/_DocumentList.scss"
 
 export interface Document {
@@ -18,11 +18,10 @@ export type TabStatus = "processing" | "completed" | "failed";
 
 interface DocumentListProps {
   documents: Document[];
-  handleDelete: (external_id: string) => void;
   deletingIds: string[];
-  activeTab: TabStatus;
-  onTabChange: (tab: TabStatus) => void;
   isLoading: boolean;
+  handleSelectDoc: (external_id: string) => void;
+  selectedDocs: string[];
 }
 
 const getFileIcon = (fileName: string): string => {
@@ -42,23 +41,12 @@ const getFileIcon = (fileName: string): string => {
     return "📄"
 }
 
-const formatFileSize = (bytes?: number) => {
-    if (bytes === undefined || bytes === 0) {
-      return ""
-    }
-    const k = 1024
-    const sizes = ["Bytes", "KB", "MB", "GB"]
-    const i = Math.floor(Math.log(bytes) / Math.log(k))
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i]
-}
-
 const DocumentList: React.FC<DocumentListProps> = ({
   documents,
-  handleDelete,
   deletingIds,
-  activeTab,
-  onTabChange,
   isLoading,
+  handleSelectDoc,
+  selectedDocs,
 }) => {
   const documentsToDisplay = React.useMemo(() => {
     return documents.sort((a, b) => a.filename.localeCompare(b.filename));
@@ -66,11 +54,6 @@ const DocumentList: React.FC<DocumentListProps> = ({
 
   return (
     <div className="document-list">
-      <div className="document-tabs">
-        <button onClick={() => onTabChange("completed")} className={activeTab === "completed" ? "active" : ""}>Completed</button>
-        <button onClick={() => onTabChange("processing")} className={activeTab === "processing" ? "active" : ""}>Processing</button>
-        <button onClick={() => onTabChange("failed")} className={activeTab === "failed" ? "active" : ""}>Failed</button>
-      </div>
       {isLoading ? (
         <div className="loading-container">
           <div className="loading-spinner"></div>
@@ -88,27 +71,10 @@ const DocumentList: React.FC<DocumentListProps> = ({
                 <div className="file-error" title={doc.system_metadata.error}>{doc.system_metadata.error || "Unknown error"}</div>
               )}
               <div className="file-actions">
-                {doc.system_metadata.status === "processing" && (
-                  <div className="progress-container">
-                    <div className="loading-spinner"></div>
-                  </div>
-                )}
-                {doc.system_metadata.status === "failed" && (
-                  deletingIds.includes(doc.external_id) ? (
-                    <div className="loading-spinner"></div>
-                  ) : (
-                    <button
-                      className="delete-btn"
-                      onClick={() => handleDelete(doc.external_id)}
-                    >
-                      Delete
-                    </button>
-                  )
-                )}
-                {doc.system_metadata.status === "completed" && (
-                  <div className="file-success">
-                    ✓
-                  </div>
+                {deletingIds.includes(doc.external_id) ? (
+                  <div className="loading-spinner"></div>
+                ) : (
+                  <input type="checkbox" checked={selectedDocs.includes(doc.external_id)} onChange={() => handleSelectDoc(doc.external_id)} />
                 )}
               </div>
             </li>

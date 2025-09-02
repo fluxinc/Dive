@@ -104,6 +104,13 @@ body {
   }
 }
 
+.action-buttons button.active-mode {
+  background: var(--bg, #f9fafb);
+  border-width: 2px;
+  border-color: black;
+  color: black;
+}
+
 .upload-zone {
   background: var(--bg-weak, white);
   padding: 2rem;
@@ -338,6 +345,8 @@ body {
   }
 }
 
+
+
 // Dark mode adjustments
 [data-theme="dark"] {
   body {
@@ -419,6 +428,8 @@ body {
       background: #222;
     }
   }
+
+
 }
 
 
