@@ -70,7 +70,9 @@
     "settings": "Model Settings",
     "update": "Update available",
     "models": "Model Settings",
-    "system": "System Settings"
+    "system": "System Settings",
+    "status": "View Documents",
+    "upload": "Upload Documents"
   },
   "tools": {
     "title": "Tools Management(MCP)",

@@ -65,7 +65,9 @@
     "settings": "設定",
     "update": "アップデートがあります",
     "models": "モデル設定",
-    "system": "システム設定"
+    "system": "システム設定",
+    "status": "ドキュメントを表示",
+    "upload": "ドキュメントをアップロード"
   },
   "tools": {
     "title": "ツール管理(MCP)",

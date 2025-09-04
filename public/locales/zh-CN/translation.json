@@ -65,7 +65,9 @@
     "settings": "模型设置",
     "update": "新版本升级",
     "models": "模型设置",
-    "system": "系统设置"
+    "system": "系统设置",
+    "status": "查看文档",
+    "upload": "上传文档"
   },
   "tools": {
     "title": "工具管理(MCP)",

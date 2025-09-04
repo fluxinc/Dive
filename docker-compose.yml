@@ -6,9 +6,9 @@ services:
     container_name: dive-frontend
     environment:
       - NODE_ENV=development
-      - VITE_DEV_SERVER_URL=http://localhost:7777/
+      - DEV_SERVER_URL=http://localhost:7777/
+      - DATABRIDGE_SERVER_URL=http://morphik:8000
       - BACKEND_URL=http://dive-backend:61990
-      - MCP_URL=http://dive-backend:3000/mcp
       - SKIP_POSTINSTALL=1
     volumes:
       - ./src:/app/src

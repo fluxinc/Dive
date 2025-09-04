@@ -65,7 +65,9 @@
     "settings": "Configuración del Modelo",
     "update": "Actualización disponible",
     "models": "Configuración del Modelo",
-    "system": "Configuración del Sistema"
+    "system": "Configuración del Sistema",
+    "status": "Ver Documentos",
+    "upload": "Subir Documentos"
   },
   "tools": {
     "title": "Gestión de Herramientas (MCP)",

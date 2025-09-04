@@ -1,0 +1,244 @@
+@use "../generated-theme" as *;
+
+.document-status-page {
+  &.main-container {
+    display: flex;
+    align-items: stretch;
+    justify-content: start;
+    flex-direction: column;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+    max-width: 1000px;
+    text-align: center;
+    height: calc(100vh - #{$header-height});
+    overflow-y: auto;
+    @include scrollbar;
+
+    h1 {
+      font-size: 1.875rem;
+      font-weight: bold;
+      color: var(--text, #1f2937);
+      margin-bottom: 1.5rem;
+      flex-shrink: 0;
+    }
+  }
+}
+
+.document-status-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.delete-btn {
+  flex-grow: 0;
+  flex-shrink: 0;
+  align-self: flex-end;
+  padding: 5px 10px;
+  border: none;
+  border-radius: 5px;
+  background-color: #ff453a;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.3s;
+
+  &:hover {
+    background-color: #d9372e;
+  }
+
+  &:disabled {
+    background-color: #8e8e93;
+    cursor: not-allowed;
+  }
+}
+
+.document-list {
+    width: 100%;
+    gap: 10px;
+  
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    
+    
+    .document-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px;
+      border-radius: 8px;
+      background-color: var(--bg-medium, #2c2c2e);
+      border: 1px solid #444;
+      gap: 15px;
+  
+      .document-info {
+        flex-grow: 0;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        cursor: pointer;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        color: var(--text, #ffffff);
+      }
+  
+      .file-icon {
+        font-size: 1.2em;
+      }
+  
+      .file-size {
+        min-width: 80px;
+        text-align: right;
+        color: #8e8e93;
+      }
+  
+      .file-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+  
+      .file-error {
+        color: #ff453a;
+        font-size: 0.9em;
+        flex-grow: 1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .file-error-icon {
+        color: #ff453a;
+        font-size: 1.5em;
+      }
+  
+      .file-success {
+        color: #32d74b;
+        font-size: 1.5em;
+      }
+      
+      .loading-spinner {
+        @include loading-spinner;
+      }
+
+      &.processing {
+        .progress-container {
+          /* You can add specific styles for the container if needed */
+        }
+      }
+    }
+  }
+  
+  .document-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    align-items: center;
+  
+    button {
+      padding: 10px 20px;
+      border-radius: 8px;
+      border: 1px solid #444;
+      background-color: var(--bg-medium, #2c2c2e);
+      color: var(--text, #000000);
+      cursor: pointer;
+      transition: background-color 0.3s;
+  
+      &.active, &:hover {
+        background-color: #007aff;
+        border-color: #007aff;
+        color: var(--text-light, #ffffff);
+      }
+    }
+
+    .pagination-info {
+      margin-left: auto;
+      font-size: 0.875rem;
+      color: var(--text-weak, #000);
+      font-weight: 500;
+    }
+  }
+
+// Pagination styles
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1rem;
+
+  .pagination-btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    user-select: none;
+
+    &:hover:not(:disabled) {
+      color: var(--text-link, #2563eb);
+      text-decoration: underline;
+    }
+
+    &.disabled {
+      visibility: hidden;
+      pointer-events: none;
+    }
+  }
+
+  .page-info {
+    font-size: 0.875rem;
+    color: var(--text, #374151);
+    font-weight: 500;
+    min-width: 120px;
+    text-align: center;
+  }
+}
+
+
+// Dark mode adjustments for pagination
+[data-theme="dark"] {
+  .pagination-controls {
+    .pagination-btn {
+      color: var(--text, #ffffff);
+
+      &:hover:not(:disabled) {
+        color: var(--text-link, #3b82f6);
+      }
+
+    }
+
+    .page-info {
+      color: var(--text, #ffffff);
+    }
+  }
+}
+
+  .document-tabs {
+    color: var(--text, #ffffff);
+  }
+
+.document-tabs .pagination-info {
+  color: var(--text-weak, #a0a0a0);
+}
+
+  
+  .loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    gap: 10px;
+  }
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
