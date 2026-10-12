@@ -3,9 +3,9 @@ name: Build
 on:
   pull_request_target:
     branches:
-      - main
+      - master
   push:
-    branches: [main]
+    branches: [master]
     paths-ignore:
       - "**.md"
       - "**.spec.js"
